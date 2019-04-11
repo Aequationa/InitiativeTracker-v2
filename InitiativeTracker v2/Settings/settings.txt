@@ -1,0 +1,4 @@
+﻿defaultColoringType=default
+defaultRemove=false
+defaultType=6
+tabWidth=4

@@ -1,0 +1,4 @@
+﻿
+clear button (?)
+
+Implement Choose Mode!

@@ -1,0 +1,14 @@
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\hostpolicy.dll
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\hostfxr.dll
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.exe
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.deps.json
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.runtimeconfig.json
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.runtimeconfig.dev.json
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.dll
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.pdb
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.csprojAssemblyReference.cache
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.csproj.CoreCompileInputs.cache
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.AssemblyInfoInputs.cache
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.AssemblyInfo.cs
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.dll
+C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\win-x64\InitiativeTracker v2.pdb

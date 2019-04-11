@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<root>
+  <coloring name="default" base_text="White" base_bg="DarkGray" active_text="Yellow" active_bg="DarkGray"></coloring> 
+  <!--black darkblue darkgreen darkcyan darkred darkmagenta darkyellow gray darkgray blue green cyan red magenta yellow white-->
+</root>

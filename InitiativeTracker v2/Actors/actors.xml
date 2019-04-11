@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?> 
+<root>
+  <actor name="Chris" ac="10" hp="25" temp="5" speed="30" ini="D20" coloring="default" remove="true">
+    <scores str="10" dex="10" con="10" int="10" wis="10" cha="10"></scores>
+    <attack name="Shortbow" atk="24" dmg="10"></attack>
+    <attack name="Longbow" mod="14" dmg="10"></attack>
+    <conditions>char med, f</conditions>
+    <note>A Note</note>
+    <note>Another Note</note>
+    <description>~
+      Hello Friend!
+      I am a Description
+    </description>
+  </actor>
+  <group name="A Group">
+    <!--Add Actors here-->
+  </group>
+</root>

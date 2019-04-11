@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>InitiativeTracker</RootNamespace>
+    <LangVersion>7.1</LangVersion>
+    <StartupObject>InitiativeTracker.Program</StartupObject>
+    <AssemblyName>InitiativeTracker</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Actors\**" />
+    <Compile Remove="Colorings\**" />
+    <Compile Remove="Settings\**" />
+    <EmbeddedResource Remove="Actors\**" />
+    <EmbeddedResource Remove="Colorings\**" />
+    <EmbeddedResource Remove="Settings\**" />
+    <None Remove="Actors\**" />
+    <None Remove="Colorings\**" />
+    <None Remove="Settings\**" />
+  </ItemGroup>
+
+</Project>
