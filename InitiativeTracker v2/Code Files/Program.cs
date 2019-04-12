@@ -30,8 +30,8 @@ namespace InitiativeTracker
             outputData.Setup();
 
             // This is pretty much just for testing
-            data.AddActor(data.loadedActors[0].CreateInstance(data.loadedColorings, out string error1));
-            data.AddActor(data.loadedActors[0].CreateInstance(data.loadedColorings, out string error2));
+            data.AddActor_Silent(data.loadedActors[0].CreateInstance(data.loadedColorings, out string error1));
+            data.AddActor_Silent(data.loadedActors[0].CreateInstance(data.loadedColorings, out string error2));
 
             screenWriter.Write(Output.GetScreen());
             // Program Loop

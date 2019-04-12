@@ -202,7 +202,7 @@ namespace InitiativeTracker
         public void AddActor(AbstractActor actor) {
             var instance = actor.CreateInstance(loadedColorings, out string errorMessage);
             if(errorMessage == null) {
-                AddActor(instance);
+                AddActor_Silent(instance);
                 changes.Push(new AddActors(instance));
             }
         }
@@ -211,14 +211,14 @@ namespace InitiativeTracker
             for(int index = 0; index < actors.Count; ++index) {
                 var instance = actors[index].CreateInstance(loadedColorings, out string errorMessage);
                 if (errorMessage == null) {
-                    AddActor(instance);
+                    AddActor_Silent(instance);
                     change.ids.Add(instance.id);
                 }
             }
             changes.Push(change);
         }
 
-        public void AddActor(Actor actor) {
+        public void AddActor_Silent(Actor actor) {
             // Set ID
             actor.id = nextID;
             ++nextID;
@@ -248,6 +248,10 @@ namespace InitiativeTracker
                 Program.outputData.Info_SetActive(Program.outputData.Info_GetActive() < pos ? Program.outputData.Info_GetActive() : Program.outputData.Info_GetActive() + 1, selectedID);
                 Program.outputData.Info_SetSelected(Program.outputData.Info_GetSelected() < pos ? Program.outputData.Info_GetSelected() : Program.outputData.Info_GetSelected() + 1, selectedID);
             }
+        }
+        public void AddActor(Actor actor) {
+            AddActor_Silent(actor);
+            changes.Push(new AddActors(actor));
         }
         public void ResurrectActor_Silent(int id, int pos) {
             if(idList.Count == 0) {

@@ -473,9 +473,9 @@ namespace InitiativeTracker
             return attack;
         }
 
-        private static List<Condition> ReadConditions(XElement element, out string errorMessage) {
+        private static Conditions ReadConditions(XElement element, out string errorMessage) {
             string[] conditionNames = element.Value.Replace(" ", string.Empty).Split(',');
-            List<Condition> conditions = new List<Condition>(conditionNames.Length);
+            Conditions conditions = new Conditions(conditionNames.Length);
 
             for (int index = 0; index < conditionNames.Length; ++index) {
                 var condition = conditionNames[index].GetCondition();

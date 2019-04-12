@@ -91,37 +91,37 @@ namespace InitiativeTracker
         public Scores GetScores(out string errorMessage) {
             Scores scores = new Scores();
 
-            var eval_strength = ObjectParser.EvaluateTokens(strength);
+            var eval_strength = strength.Evaluate();
             if (!eval_strength.HasValue) {
                 errorMessage = "[Scores] Unable to Compute: str";
                 return default;
             }
             scores.strength = eval_strength.Value;
-            var eval_dexterity = ObjectParser.EvaluateTokens(dexterity);
+            var eval_dexterity = dexterity.Evaluate();
             if (!eval_dexterity.HasValue) {
                 errorMessage = "[Scores] Unable to Compute: dex";
                 return default;
             }
             scores.dexterity = eval_dexterity.Value;
-            var eval_constitution = ObjectParser.EvaluateTokens(constitution);
+            var eval_constitution = constitution.Evaluate();
             if (!eval_constitution.HasValue) {
                 errorMessage = "[Scores] Unable to Compute: con";
                 return default;
             }
             scores.constitution = eval_constitution.Value;
-            var eval_intelligence = ObjectParser.EvaluateTokens(intelligence);
+            var eval_intelligence = intelligence.Evaluate();
             if (!eval_intelligence.HasValue) {
                 errorMessage = "[Scores] Unable to Compute: int";
                 return default;
             }
             scores.intelligence = eval_intelligence.Value;
-            var eval_wisdom = ObjectParser.EvaluateTokens(wisdom);
+            var eval_wisdom = wisdom.Evaluate();
             if (!eval_wisdom.HasValue) {
                 errorMessage = "[Scores] Unable to Compute: wis";
                 return default;
             }
             scores.wisdom = eval_wisdom.Value;
-            var eval_charisma = ObjectParser.EvaluateTokens(charisma);
+            var eval_charisma = charisma.Evaluate();
             if (!eval_charisma.HasValue) {
                 errorMessage = "[Scores] Unable to Compute: cha";
                 return default;
@@ -228,6 +228,107 @@ namespace InitiativeTracker
         }
     }
 
+    public class Conditions
+    {
+        private List<Condition> conditions;
+
+        public Conditions() {
+            conditions = new List<Condition>();
+        }
+        public Conditions(int capacity) {
+            conditions = new List<Condition>(capacity);
+        }
+        private Conditions(List<Condition> conditions) {
+            this.conditions = conditions;
+        }
+
+        public Conditions Clone() {
+            return new Conditions(new List<Condition>(conditions));
+        }
+        public bool IsEmpty() {
+            return conditions.Count == 0;
+        }
+        public bool Contains(Condition condition) {
+            // Find Best Position
+            int N = 0;
+            while (conditions.Count > 1 << N) {
+                ++N;
+            }
+            int pos = 0;
+            for (int n = N - 1; n >= 0; --n) {
+                int next = pos + (1 << n);
+                if (next < conditions.Count && (int)conditions[next] <= (int)condition) {
+                    pos = next;
+                }
+            }
+            // Check if Item already exists
+            if (pos < conditions.Count && conditions[pos] == condition) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        public IEnumerator<Condition> GetEnumerator() {
+            return conditions.GetEnumerator();
+        }
+
+        public bool Add(Condition condition) {
+            // Find Insert Position
+            int N = 0;
+            while (conditions.Count + 1 > 1 << N) {
+                ++N;
+            }
+            int pos = 0;
+            for (int n = N - 1; n >= 0; --n) {
+                int next = pos + (1 << n);
+                if (next - 1 < conditions.Count && (int)conditions[next - 1] <= (int)condition) {
+                    pos = next;
+                }
+            }
+            // Check if Item already exists
+            if (pos - 1 >= 0 && conditions[pos - 1] == condition) {
+                return false;
+            }
+            else {
+                conditions.Insert(pos, condition);
+                return true;
+            }
+        }
+        public bool Remove() {
+            if(conditions.Count != 0) {
+                conditions.RemoveAt(conditions.Count - 1);
+                return true;
+            }
+            return false;
+        }
+        public bool Remove(Condition condition) {
+            // Find Best Position
+            int N = 0;
+            while (conditions.Count > 1 << N) {
+                ++N;
+            }
+            int pos = 0;
+            for (int n = N - 1; n >= 0; --n) {
+                int next = pos + (1 << n);
+                if (next < conditions.Count && (int)conditions[next] <= (int)condition) {
+                    pos = next;
+                }
+            }
+            // Check if Item already exists
+            if (pos < conditions.Count && conditions[pos] == condition) {
+                conditions.RemoveAt(pos);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        public void Clear() {
+            conditions.Clear();
+        }
+    }
+
     public struct Note
     {
         public int index;
@@ -259,7 +360,7 @@ namespace InitiativeTracker
         public Option<string> speed = Option<string>.Null;
         public Option<Scores> scores = Option<Scores>.Null;
         public List<Attack> attacks = new List<Attack>();
-        public List<Condition> conditions = null;
+        public Conditions conditions = null;
         public int nextNoteIndex = 1;
         public List<Note> notes = new List<Note>();
         public Option<List<string>> description = Option<List<string>>.Null;
@@ -269,30 +370,13 @@ namespace InitiativeTracker
         /// Return whether Condition was added
         /// </summary>
         public bool AddCondition_Silent(Condition condition) {
-            // Find Insert Position
-            int N = 0;
-            while (conditions.Count + 1 > 1 << N) {
-                ++N;
-            }
-            int pos = 0;
-            for (int n = N - 1; n >= 0; --n) {
-                int next = pos + (1 << n);
-                if (next - 1 < conditions.Count && (int)conditions[next - 1] <= (int)condition) {
-                    pos = next;
-                }
-            }
-            // Check if Item already exists
-            if (pos - 1 >= 0 && pos - 1 < conditions.Count && conditions[pos - 1] == condition) {
-                return false;
-            }
-            conditions.Insert(pos, condition);
-            return true;
+            return conditions.Add(condition);
         }
         /// <summary>
         /// Return whether Condition was added
         /// </summary>
         public bool AddCondition(Condition condition) {
-            if (AddCondition_Silent(condition)) {
+            if (conditions.Add(condition)) {
                 Program.data.changes.Push(new AddCondition(id, condition));
                 return true;
             }
@@ -304,32 +388,13 @@ namespace InitiativeTracker
         /// Return whether Condition was removed
         /// </summary>
         public bool RemoveCondition_Silent(Condition condition) {
-            // Find Insert Position
-            int N = 0;
-            while (conditions.Count > 1 << N) {
-                ++N;
-            }
-            int pos = 0;
-            for (int n = N - 1; n >= 0; --n) {
-                int next = pos + (1 << n);
-                if (next < conditions.Count && (int)conditions[next] <= (int)condition) {
-                    pos = next;
-                }
-            }
-            // Check if Item already exists
-            if (pos < conditions.Count && conditions[pos] == condition) {
-                conditions.RemoveAt(pos);
-                return true;
-            }
-            else {
-                return false;
-            }
+            return conditions.Remove(condition);
         }
         /// <summary>
         /// Return whether Condition was removed
         /// </summary>
         public bool RemoveCondition(Condition condition) {
-            if (RemoveCondition_Silent(condition)) {
+            if (conditions.Remove(condition)) {
                 Program.data.changes.Push(new RemoveCondition(id, condition));
                 return true;
             }
@@ -433,7 +498,7 @@ namespace InitiativeTracker
         public Option<string> speed = new Option<string>();
         public Option<AbstractScores> scores = Option<AbstractScores>.Null;
         public List<Attack> attacks = new List<Attack>();
-        public List<Condition> conditions = null;
+        public Conditions conditions = null;
         public List<string> notes = new List<string>();
         public Option<List<string>> description = Option<List<string>>.Null;
         public bool remove = Program.settings.defaultRemove;
@@ -443,7 +508,7 @@ namespace InitiativeTracker
             // Get Name
             actor.name = name;
             // Get HP Values
-            var eval_HP = ObjectParser.EvaluateTokens(HP);
+            var eval_HP = HP.Evaluate();
             if(!eval_HP.HasValue){
                 errorMessage = "[Actor, name='" + name + "'] Unable to Compute: hp";
                 return actor;
@@ -452,7 +517,7 @@ namespace InitiativeTracker
             actor.maximumHP = eval_HP.Value;
 
             if (temporary.HasValue) {
-                var eval_temporary = ObjectParser.EvaluateTokens(temporary.Value);
+                var eval_temporary = temporary.Value.Evaluate();
                 if (!eval_temporary.HasValue) {
                     errorMessage = "[Actor, name='" + name + "'] Unable to Compute: temp";
                     return actor;
@@ -499,7 +564,7 @@ namespace InitiativeTracker
             }
             // Get Armor Class
             if (armorClass.HasValue) {
-                var eval_armorClass = ObjectParser.EvaluateTokens(armorClass.Value);
+                var eval_armorClass = armorClass.Value.Evaluate();
                 if (!eval_armorClass.HasValue) {
                     errorMessage = "[Actor, name='" + name + "'] Unable to Compute: ac";
                     return actor;
@@ -519,7 +584,7 @@ namespace InitiativeTracker
             }
             // Get Intiative
             if (initiative.HasValue) {
-                var eval_initiative = ObjectParser.EvaluateTokens(initiative.Value);
+                var eval_initiative = initiative.Value.Evaluate();
                 if (!eval_initiative.HasValue) {
                     errorMessage = "[Actor, name='" + name + "'] Unable to Compute: ini";
                     return actor;
@@ -539,10 +604,10 @@ namespace InitiativeTracker
             actor.attacks = attacks;
             actor.description = description;
             if(conditions == null) {
-                actor.conditions = new List<Condition>();
+                actor.conditions = new Conditions();
             }
             else {
-                actor.conditions = new List<Condition>(conditions);
+                actor.conditions = conditions.Clone();
             }
             // Get Notes
             for(int index = 0; index < notes.Count; ++index) {

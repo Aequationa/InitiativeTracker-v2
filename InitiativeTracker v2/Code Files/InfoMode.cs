@@ -68,8 +68,8 @@ namespace InitiativeTracker
             if (Program.data.idList.Count > 0) {
                 var attacks = Program.data.GetActor(Program.data.idList[Program.outputData.info_selected]).attacks;
                 for (int index = 0; index < attacks.Count; ++index) {
-                    var attack = ObjectParser.EvaluateTokens(attacks[index].attack);
-                    var damage = ObjectParser.EvaluateTokens(attacks[index].damage);
+                    var attack = attacks[index].attack.Evaluate();
+                    var damage = attacks[index].damage.Evaluate();
                     info_attackValues.Add(new Tuple<string, string>(
                         attack.HasValue ? attack.Value.ToString() : "?",
                         damage.HasValue ? damage.Value.ToString() : "?"));
@@ -265,28 +265,34 @@ namespace InitiativeTracker
 
             // Conditions, Notes, Description
             bool topLineExists = true;
-            if(actor.conditions.Count > 0) {
+            if(!actor.conditions.IsEmpty()) {
                 if (Program.outputData.info_details) {
                     // Format conditon
                     //         text text text text
-                    for(int index = 0; index < actor.conditions.Count; ++index) {
-                        string conditionText = actor.conditions[index].GetName();
-                        screen.AddFormattedLine(conditionText,
-                            ConsoleColor.Yellow, ConsoleColor.Black, left + InfoLeftBorder, int.MaxValue, top);
-                        ++top;
-                        List<string> descriptionText = actor.conditions[index].GetDescription();
-                        top += screen.AddFormattedLines(descriptionText,
-                            ConsoleColor.White, ConsoleColor.Black, left + InfoLeftBorder + InfoLeftIndent, screen.Width - InfoRightBorder, top);
+                    using(var conditionEnum = actor.conditions.GetEnumerator()) {
+                        while (conditionEnum.MoveNext()) {
+                            var condition = conditionEnum.Current;
+                            string conditionText = condition.GetName();
+                            screen.AddFormattedLine(conditionText,
+                                ConsoleColor.Yellow, ConsoleColor.Black, left + InfoLeftBorder, int.MaxValue, top);
+                            ++top;
+                            List<string> descriptionText = condition.GetDescription();
+                            top += screen.AddFormattedLines(descriptionText,
+                                ConsoleColor.White, ConsoleColor.Black, left + InfoLeftBorder + InfoLeftIndent, screen.Width - InfoRightBorder, top);
+                        }
                     }
                 }
                 else {
-                    StringBuilder conditions = new StringBuilder(actor.conditions[0].GetName());
-                    for(int index = 1; index < actor.conditions.Count; ++index) {
-                        conditions.Append(", ");
-                        conditions.Append(actor.conditions[index].GetName());
+                    using(var conditionEnum = actor.conditions.GetEnumerator()) {
+                        conditionEnum.MoveNext();
+                        StringBuilder conditions = new StringBuilder(conditionEnum.Current.GetName());
+                        while (conditionEnum.MoveNext()) {
+                            conditions.Append(", ");
+                            conditions.Append(conditionEnum.Current.GetName());
+                        }
+                        top += screen.AddFormattedLines(new List<string> { conditions.ToString() },
+                            ConsoleColor.White, ConsoleColor.Black, left + InfoLeftBorder, screen.Width - InfoRightBorder, top);
                     }
-                    top += screen.AddFormattedLines(new List<string> { conditions.ToString() },
-                        ConsoleColor.White, ConsoleColor.Black, left + InfoLeftBorder, screen.Width - InfoRightBorder, top);
                 }
                 topLineExists = false;
             }
@@ -307,7 +313,7 @@ namespace InitiativeTracker
                 }
                 topLineExists = false;
             }
-            // Dont forget them lines!
+            // Description
             if (actor.description.HasValue) {
                 if (!topLineExists) {
                     screen.AddPartialHLine(left - 1, top);
@@ -521,7 +527,7 @@ namespace InitiativeTracker
                     // Evaluate Tokens
                     var tokens = ObjectParser.GetTokens(Program.outputData.Info_GetArgument());
                     if (tokens.HasValue) {
-                        var result = ObjectParser.EvaluateTokens(tokens.Value);
+                        var result = tokens.Value.Evaluate();
                         if (result.HasValue) {
                             switch (Program.outputData.info_opMode) {
                                 case Info_OpMode.LoseHealth:

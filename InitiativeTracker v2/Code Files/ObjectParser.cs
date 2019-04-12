@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace InitiativeTracker
 {
@@ -355,12 +356,12 @@ namespace InitiativeTracker
             return ValidateTokens(tokens, 0, tokens.Count);
         }
 
-        private static Option<int> EvaluateTokens(List<Token> tokens, int start, int end) {
+        private static Option<int> Evaluate(this List<Token> tokens, int start, int end) {
             // Evaluate (...) and create a List of simple Tokens without (...)
             List<Token> simpleTokens = new List<Token>();
             for (int index = start; index < end;) {
                 if (tokens[index].type == TokenType.Bracket) {
-                    var result = EvaluateTokens(tokens, index + 1, tokens[index].value);
+                    var result = tokens.Evaluate(index + 1, tokens[index].value);
                     if (!result.HasValue) {
                         return Option<int>.Null;
                     }
@@ -469,10 +470,52 @@ namespace InitiativeTracker
         /// <summary>
         /// Returns Evaluation of Tokens
         /// </summary>
-        public static Option<int> EvaluateTokens(List<Token> tokens) {
-            return EvaluateTokens(tokens, 0, tokens.Count);
+        public static Option<int> Evaluate(this List<Token> tokens) {
+            return tokens.Evaluate(0, tokens.Count);
         }
 
+        private static void AddString(List<Token> tokens, ref StringBuilder stringBuilder, int start, int end) {
+            int pos = start;
+            while(pos < end) {
+                switch (tokens[pos].type) {
+                    case TokenType.Integer:
+                        stringBuilder.Append(tokens[pos].value.ToString());
+                        ++pos;
+                        break;
+                    case TokenType.Bracket:
+                        stringBuilder.Append('(');
+                        AddString(tokens, ref stringBuilder, pos, tokens[pos].value);
+                        stringBuilder.Append(')');
+                        pos = tokens[pos].value;
+                        break;
+                    case TokenType.Dice:
+                        stringBuilder.Append('D');
+                        ++pos;
+                        break;
+                    case TokenType.Add:
+                        stringBuilder.Append('+');
+                        ++pos;
+                        break;
+                    case TokenType.Subtract:
+                        stringBuilder.Append('-');
+                        ++pos;
+                        break;
+                    case TokenType.Multiply:
+                        stringBuilder.Append('*');
+                        ++pos;
+                        break;
+                    case TokenType.Divide:
+                        stringBuilder.Append('/');
+                        ++pos;
+                        break;
+                }
+            }
+        }
+        public static string GetString(this List<Token> tokens) {
+            StringBuilder stringBuilder = new StringBuilder();
+            AddString(tokens, ref stringBuilder, 0, tokens.Count);
+            return stringBuilder.ToString();
+        }
 
 
         // === Parse Console Color ===
