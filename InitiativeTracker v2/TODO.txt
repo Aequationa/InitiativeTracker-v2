@@ -1,4 +1,5 @@
-﻿
-clear button (?)
-
+﻿check where we have ctrl+z
+add fancy lines as well
+tostring for list of tokens
 Implement Choose Mode!
+create custon contitions list

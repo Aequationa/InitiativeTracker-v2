@@ -12,7 +12,7 @@ namespace InitiativeTracker
         public Mode mode;
 
         public void Setup() {
-            mode = Mode.Info;
+            mode = Mode.Create;
             Info_Setup();
             Select_Setup();
             Create_Setup();
@@ -88,10 +88,7 @@ namespace InitiativeTracker
             return Math.Min(width / 2, 60);
         }
         private const ConsoleColor LineColor = ConsoleColor.Gray;
-        /// <summary>
-        /// Adds a Double Vertical Line from Top to Bottom
-        /// </summary>
-        private static void AddDoubleVerticalLine(Screen screen, int x) {
+        private static void AddDoubleVLine(this Screen screen, int x) {
             if(x >= 0 && x < screen.Width) {
                 for(int pos = 0; pos < screen.Height; ++pos) {
                     screen.SetC(x, pos, '║');
@@ -99,10 +96,7 @@ namespace InitiativeTracker
                 }
             }
         }
-        /// <summary>
-        /// Adds a Double Horizontal Line right of a Double Vertical Line
-        /// </summary>
-        private static void AddDoubleHorizontalLine(Screen screen, int x, int y) {
+        private static void AddPartialDoubleHLine(this Screen screen, int x, int y) {
             if(y >= 0 && y < screen.Height) {
                 if (x >= 0 && x < screen.Width) {
                     screen.SetC(x, y, '╠');
@@ -113,10 +107,7 @@ namespace InitiativeTracker
                 }
             }
         }
-        /// <summary>
-        /// Adds a Horizontal Line right of a Vertical Line
-        /// </summary>
-        private static void AddHorizontalLine(Screen screen, int x, int y) {
+        private static void AddPartialHLine(this Screen screen, int x, int y) {
             if(y >= 0 && y < screen.Height) {
                 if (x >= 0 && x < screen.Width) {
                     screen.SetC(x, y, '╟');
@@ -127,13 +118,31 @@ namespace InitiativeTracker
                 }
             }
         }
+        private static void AddFullDoubleHLine(this Screen screen, int y) {
+            if(y >= 0 && y < screen.Height) {
+                for(int x = 0; x < screen.Width; ++x) {
+                    screen.SetC(x, y, '═');
+                    screen.SetForeground(x, y, LineColor);
+                    screen.SetBackground(x, y, ConsoleColor.Black);
+                }
+            }
+        }
+        private static void AddFullHLine(this Screen screen, int y) {
+            if (y >= 0 && y < screen.Height) {
+                for (int x = 0; x < screen.Width; ++x) {
+                    screen.SetC(x, y, '─');
+                    screen.SetForeground(x, y, LineColor);
+                    screen.SetBackground(x, y, ConsoleColor.Black);
+                }
+            }
+        }
 
         private const int ListLeftBorder = 2;
         private const int ListRightBorder = 2;
         private const int ListTopBorder = 1;
         private const ConsoleColor ArmorColor = ConsoleColor.White;
         private const ConsoleColor HealthColor = ConsoleColor.Red;
-        private static void AddInitiativeList(Screen screen, int right) {
+        private static void AddInitiativeList(this Screen screen, int right) {
             // Add Name, AC, HP for each, formatted like 'Name Name Name ▼ 15 ♥ 10+20/20'
             for(int index = 0; index < Program.data.idList.Count; ++index) {
                 var actor = Program.data.GetActor(Program.data.idList[index]);

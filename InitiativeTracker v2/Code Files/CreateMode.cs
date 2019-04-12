@@ -1,15 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace InitiativeTracker
 {
-    public enum CreateNode
+    public enum CreateNode : byte
     {
+        Clear,
         Name,
-        INI, Speed, AC, HP, Temp,
-        ColoringType, Remove, Coloring_BaseText, Coloring_BaseBG, Coloring_ActiveText, Coloring_ActiveBG, 
+        INI,
+        Speed,
+        AC,
+        HP, Temp,
+        ColoringType, Remove,
+        Coloring_BaseText, Coloring_BaseBG, Coloring_ActiveText, Coloring_ActiveBG, 
         Score_Str, Score_Dex, Score_Con, Score_Int, Score_Wis, Score_Cha,
-        Attack_Name, Attack_Atk, Attack_Mod, Attack_Dmg,
+        Attack_Name,
+        Attack_Atk, Attack_Mod, Attack_Dmg,
         Condition, 
         Note,
         Description,
@@ -19,6 +26,8 @@ namespace InitiativeTracker
     {
         public static CreateNode MoveDown(this CreateNode node) {
             switch (node) {
+                case CreateNode.Clear:
+                    return CreateNode.Name;
                 case CreateNode.Name:
                     return CreateNode.INI;
                 case CreateNode.INI:
@@ -64,7 +73,9 @@ namespace InitiativeTracker
         }
         public static CreateNode MoveUp(this CreateNode node) {
             switch (node) {
+                case CreateNode.Clear:
                 case CreateNode.Name:
+                    return CreateNode.Clear;
                 case CreateNode.INI:
                     return CreateNode.Name;
                 case CreateNode.Speed:
@@ -109,6 +120,8 @@ namespace InitiativeTracker
         }
         public static CreateNode MoveLeft(this CreateNode node) {
             switch (node) {
+                case CreateNode.Clear:
+                    return CreateNode.Clear;
                 case CreateNode.Name:
                     return CreateNode.Name;
                 case CreateNode.INI:
@@ -162,6 +175,8 @@ namespace InitiativeTracker
         }
         public static CreateNode MoveRight(this CreateNode node) {
             switch (node) {
+                case CreateNode.Clear:
+                    return CreateNode.Clear;
                 case CreateNode.Name:
                     return CreateNode.Name;
                 case CreateNode.INI:
@@ -214,18 +229,19 @@ namespace InitiativeTracker
             }
         }
     }
-
-    public enum ControlInvalid
+    
+    public enum WarnType : byte
     {
-        Default, ForceValid, ForceInvalid
+        AllowEmpty, ForbidEmpty, ExpectEmpty, ForceWarn
     }
+
     public abstract class InputField
     {
         public abstract void Add(char c);
         public abstract void Remove();
         public abstract void Clear();
         
-        public abstract int AddPrinting(Screen screen, int left, int top, ControlInvalid control);
+        public abstract int AddPrinting(Screen screen, int left, int top, WarnType warnType);
     }
     public class StringField : InputField
     {
@@ -259,19 +275,53 @@ namespace InitiativeTracker
             return valueString;
         }
 
-        // TODO: With scrolling text for really long input
-        public override int AddPrinting(Screen screen, int left, int top, ControlInvalid control) {
-            screen.AddFormattedLine(valueString, ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, top);
-            int width = valueString.Length;
-            if (control == ControlInvalid.ForceInvalid) {
-                string warnString = " !";
+        public override int AddPrinting(Screen screen, int left, int top, WarnType warnType) {
+            int availableWidth = screen.Width - left;
+            if (top == screen.Height - 1) {
+                --availableWidth;
+            }
+            string warnString = " !";
+            bool putWarn;
+            switch (warnType) {
+                case WarnType.AllowEmpty:
+                    putWarn = false;
+                    break;
+                case WarnType.ForbidEmpty:
+                    putWarn = value.Count == 0;
+                    break;
+                case WarnType.ExpectEmpty:
+                    putWarn = value.Count != 0;
+                    break;
+                case WarnType.ForceWarn:
+                default:
+                    putWarn = true;
+                    break;
+            }
+            if (putWarn) {
+                availableWidth -= warnString.Length;
+            }
+            if(availableWidth < 0) {
+                return 0;
+            }
+            // Write Line
+            string written;
+            if(availableWidth >= valueString.Length) {
+                written = valueString;
+            }
+            else {
+                written = valueString.Substring(valueString.Length - availableWidth);
+            }
+            screen.AddFormattedLine(written, ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, top);
+            int width = written.Length;
+            // Add Warning
+            if (putWarn) {
                 screen.AddFormattedLine(warnString, ConsoleColor.Red, ConsoleColor.Black, left + width, int.MaxValue, top);
                 width += warnString.Length;
             }
             return width;
         }
     }
-    
+
     public class ExpressionField : InputField
     {
         private List<char> expr = new List<char>();
@@ -281,6 +331,7 @@ namespace InitiativeTracker
 
         public override void Add(char c) {
             ObjectParser.FormatExpressionChar(c, ref expr);
+            Update();
         }
         public override void Remove() {
             if (expr.Count != 0) {
@@ -313,15 +364,31 @@ namespace InitiativeTracker
         public bool HasValue() {
             return exprValid;
         }
-        public int Evaluate() {
-            return ObjectParser.EvaluateTokens(exprTokens).Value;
+        public List<Token> GetTokens() {
+            return exprTokens;
         }
 
-        public override int AddPrinting(Screen screen, int left, int top, ControlInvalid control) {
+        public override int AddPrinting(Screen screen, int left, int top, WarnType warnType) {
             screen.AddFormattedLine(exprString, ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, top);
             int width = exprString.Length;
-            if (control == ControlInvalid.ForceInvalid || (!exprValid && control == ControlInvalid.Default) ) {
-                string warnString = " !";
+            string warnString = " !";
+            bool putWarn;
+            switch (warnType) {
+                case WarnType.AllowEmpty:
+                    putWarn = expr.Count != 0 && !exprValid;
+                    break;
+                case WarnType.ForbidEmpty:
+                    putWarn = !exprValid;
+                    break;
+                case WarnType.ExpectEmpty:
+                    putWarn = expr.Count != 0;
+                    break;
+                case WarnType.ForceWarn:
+                default:
+                    putWarn = true;
+                    break;
+            }
+            if (putWarn) {
                 screen.AddFormattedLine(warnString, ConsoleColor.Red, ConsoleColor.Black, left + width, int.MaxValue, top);
                 width += warnString.Length;
             }
@@ -372,10 +439,10 @@ namespace InitiativeTracker
             return expr.Count == 0 ? defaultValue : exprValue.Value;
         }
         
-        public override int AddPrinting(Screen screen, int left, int top, ControlInvalid control) {
+        public override int AddPrinting(Screen screen, int left, int top, WarnType warnType) {
             int width;
-            if (exprString.Length == 0) {
-                screen.AddFormattedLine(defaultValue.ToString(), ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, top);
+            if (expr.Count == 0) {
+                screen.AddFormattedLine(defaultValue.ToString(), ConsoleColor.DarkGray, ConsoleColor.Black, left, int.MaxValue, top);
                 width = exprString.Length;
             }
             else {
@@ -391,7 +458,23 @@ namespace InitiativeTracker
                 }
             }
             // Add Warning
-            if ((!exprValue.HasValue && control == ControlInvalid.Default) || control == ControlInvalid.ForceInvalid) {
+            bool putWarn;
+            switch (warnType) {
+                case WarnType.AllowEmpty:
+                    putWarn = expr.Count != 0 && !exprValue.HasValue;
+                    break;
+                case WarnType.ForbidEmpty:
+                    putWarn = !exprValue.HasValue;
+                    break;
+                case WarnType.ExpectEmpty:
+                    putWarn = expr.Count != 0;
+                    break;
+                case WarnType.ForceWarn:
+                default:
+                    putWarn = true;
+                    break;
+            }
+            if (putWarn) {
                 string warnString = " !";
                 screen.AddFormattedLine(warnString, ConsoleColor.Red, ConsoleColor.Black, left + width, int.MaxValue, top);
                 width += warnString.Length;
@@ -437,7 +520,7 @@ namespace InitiativeTracker
             return exprValue.Value;
         }
 
-        public override int AddPrinting(Screen screen, int left, int top, ControlInvalid control) {
+        public override int AddPrinting(Screen screen, int left, int top, WarnType warnType) {
             int width;
             
             screen.AddFormattedLine(exprString, ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, top);
@@ -451,7 +534,23 @@ namespace InitiativeTracker
                 width = exprString.Length;
             }
             // Add Warning
-            if ((!exprValue.HasValue && control == ControlInvalid.Default) || control == ControlInvalid.ForceInvalid) {
+            bool putWarn;
+            switch (warnType) {
+                case WarnType.AllowEmpty:
+                    putWarn = expr.Count != 0 && !exprValue.HasValue;
+                    break;
+                case WarnType.ForbidEmpty:
+                    putWarn = !exprValue.HasValue;
+                    break;
+                case WarnType.ExpectEmpty:
+                    putWarn = expr.Count != 0;
+                    break;
+                case WarnType.ForceWarn:
+                default:
+                    putWarn = true;
+                    break;
+            }
+            if (putWarn) {
                 string warnString = " !";
                 screen.AddFormattedLine(warnString, ConsoleColor.Red, ConsoleColor.Black, left + width, int.MaxValue, top);
                 width += warnString.Length;
@@ -494,7 +593,7 @@ namespace InitiativeTracker
             return exprValue.Value;
         }
 
-        public override int AddPrinting(Screen screen, int left, int top, ControlInvalid control) {
+        public override int AddPrinting(Screen screen, int left, int top, WarnType warnType) {
             int width;
             
             screen.AddFormattedLine(exprString, ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, top);
@@ -508,7 +607,23 @@ namespace InitiativeTracker
                 width = exprString.Length;
             }
             // Add Warning
-            if ((!exprValue.HasValue && control == ControlInvalid.Default) || control == ControlInvalid.ForceInvalid) {
+            bool putWarn;
+            switch (warnType) {
+                case WarnType.AllowEmpty:
+                    putWarn = expr.Count != 0 && !exprValue.HasValue;
+                    break;
+                case WarnType.ForbidEmpty:
+                    putWarn = !exprValue.HasValue;
+                    break;
+                case WarnType.ExpectEmpty:
+                    putWarn = expr.Count != 0;
+                    break;
+                case WarnType.ForceWarn:
+                default:
+                    putWarn = true;
+                    break;
+            }
+            if (putWarn) {
                 string warnString = " !";
                 screen.AddFormattedLine(warnString, ConsoleColor.Red, ConsoleColor.Black, left + width, int.MaxValue, top);
                 width += warnString.Length;
@@ -521,7 +636,7 @@ namespace InitiativeTracker
 
     partial class OutputData
     {
-        public CreateNode create_currentNode = CreateNode.Name;
+        public CreateNode create_activeNode = CreateNode.Name;
 
         public StringField create_name = new StringField();
         public ExpressionField create_ini = new ExpressionField();
@@ -552,91 +667,356 @@ namespace InitiativeTracker
 
         public List<Condition> create_conditions = new List<Condition>();
         public ConditionField create_condition = new ConditionField();
+        public List<string> create_notes = new List<string>();
         public StringField create_note = new StringField();
-        public List<string> descriptionLines = new List<string>();
+        public List<string> create_descriptionLines = new List<string>();
         public StringField create_description = new StringField();
 
-        public bool create_check_coloring = false;
-        public bool create_check_scores = false;
-        public bool create_check_attack = false;
+        /// <summary>
+        /// If 0/4 Coloring Values are entered
+        /// </summary>
+        public bool create_check_noColors = false;
+        /// <summary>
+        /// If Coloring Type Exists
+        /// </summary>
+        public bool create_check_coloringValid = false;
+        /// <summary>
+        /// If no Scores are entered
+        /// </summary>
+        public bool create_check_noScores = false;
+        /// <summary>
+        /// If all everything is Correct
+        /// </summary>
         public bool create_check_all = false;
-
+        
         public void Create_UpdateChecks() {
             // Update Coloring Check
             bool allColors = create_base_text.HasValue() && create_base_bg.HasValue() && create_active_text.HasValue() && create_active_bg.HasValue();
-            bool noColors = create_base_text.IsEmpty() && create_base_bg.IsEmpty() && create_active_text.IsEmpty() && create_active_bg.IsEmpty();
+            create_check_noColors = create_base_text.IsEmpty() && create_base_bg.IsEmpty() && create_active_text.IsEmpty() && create_active_bg.IsEmpty();
 
-            if (!allColors && !noColors) {
-                create_check_coloring = false;
-            }
-            else if(allColors) {
-                create_check_coloring = create_coloring.GetValue().Length == 0;
+            if (create_coloring.IsEmpty()) {
+                create_check_coloringValid = Program.data.HasColoringType(Program.settings.defaultColoringType);
             }
             else {
-                if(create_coloring.IsEmpty()) {
-                    create_check_coloring = Program.data.HasColoringType(Program.settings.defaultColoringType);
-                }
-                else {
-                    create_check_coloring = Program.data.HasColoringType(create_coloring.GetValue());
-                }
+                create_check_coloringValid = Program.data.HasColoringType(create_coloring.GetValue());
             }
-
+            
             // Update Scores Check
             bool allScores = create_score_str.HasValue() && create_score_dex.HasValue() && create_score_con.HasValue()
                 && create_score_int.HasValue() && create_score_wis.HasValue() && create_score_cha.HasValue();
-            bool noScores = create_score_str.IsEmpty() && create_score_dex.IsEmpty() && create_score_con.IsEmpty()
+            create_check_noScores = create_score_str.IsEmpty() && create_score_dex.IsEmpty() && create_score_con.IsEmpty()
                 && create_score_int.IsEmpty() && create_score_wis.IsEmpty() && create_score_cha.IsEmpty();
 
-            create_check_scores = allScores || noScores;
-
-            // Update Attack Check
-            bool attack_valid = (create_attack_atk.HasValue() || create_attack_atk.IsEmpty()) && (create_attack_mod.HasValue() || create_attack_mod.IsEmpty());
-            create_check_attack = attack_valid && (create_attack_atk.HasValue() ^ create_attack_mod.HasValue());
-
             // Update Complete Check
-            create_check_all = create_ini.HasValue() && (create_ac.HasValue() || create_ac.IsEmpty())
+            bool hasColoring = (create_check_noColors && create_check_coloringValid) || (allColors && create_coloring.IsEmpty());
+
+            create_check_all = (create_ini.HasValue() || allScores) && (create_ac.HasValue() || create_ac.IsEmpty())
                 && create_hp.HasValue() && (create_temp.HasValue() || create_temp.IsEmpty())
-                && create_check_coloring && (create_remove.HasValue() || create_remove.IsEmpty())
-                && create_check_scores;
+                && hasColoring && (create_remove.HasValue() || create_remove.IsEmpty())
+                && (allScores || create_check_noScores);
         }
 
         public void Create_Setup() {
             create_remove.SetDefault(Program.settings.defaultRemove);
             Create_UpdateChecks();
         }
+        
+        public void Create_ClearData() {
+            create_name.Clear();
+            create_ini.Clear();
+            create_speed.Clear();
+            create_ac.Clear();
+            create_hp.Clear();
+            create_temp.Clear();
 
-        // TODO
+            create_coloring.Clear();
+            create_remove.Clear();
+            create_base_text.Clear();
+            create_base_bg.Clear();
+            create_active_text.Clear();
+            create_active_bg.Clear();
+
+            create_score_str.Clear();
+            create_score_dex.Clear();
+            create_score_con.Clear();
+            create_score_int.Clear();
+            create_score_wis.Clear();
+            create_score_cha.Clear();
+
+            create_attacks.Clear();
+            create_attack_name.Clear();
+            create_attack_atk.Clear();
+            create_attack_mod.Clear();
+            create_attack_dmg.Clear();
+
+            create_conditions.Clear();
+            create_condition.Clear();
+            create_notes.Clear();
+            create_note.Clear();
+            create_descriptionLines.Clear();
+            create_description.Clear();
+
+            Create_UpdateChecks();
+        }
+        
         public void Create_AddAttack() {
+            // Check if Attack Valid
+            bool hasAtk = create_attack_atk.HasValue();
+            bool hasMod = create_attack_mod.HasValue();
+            bool valid = (hasAtk || create_attack_atk.IsEmpty()) && (hasMod || create_attack_mod.IsEmpty())
+                && (hasAtk ^ hasMod) && create_attack_dmg.HasValue();
+            if (valid) {
+                if (hasAtk) {
+                    create_attacks.Add(new Attack(create_attack_name.GetValue(), create_attack_atk.GetTokens(), create_attack_dmg.GetTokens()));
+                }
+                else {
+                    List<Token> atk = new List<Token> { new Token(TokenType.Dice), new Token(TokenType.Integer, 20), new Token(TokenType.Add) };
+                    atk.AddRange(create_attack_mod.GetTokens());
+                    create_attacks.Add(new Attack(create_attack_name.GetValue(), atk, create_attack_dmg.GetTokens()));
+                }
+            }
         }
         public void Create_RemoveAttack() {
-
+            if(create_attacks.Count > 0) {
+                create_attacks.RemoveAt(create_attacks.Count - 1);
+            }
         }
-        public void Create_AddCondition() {
-
+        public bool Create_AddCondition() {
+            if (create_condition.HasValue()) {
+                var condition = create_condition.GetValue();
+                // Find Insert Position
+                int N = 0;
+                while (create_conditions.Count + 1 > 1 << N) {
+                    ++N;
+                }
+                int pos = 0;
+                for (int n = N - 1; n >= 0; --n) {
+                    int next = pos + (1 << n);
+                    if (next - 1 < create_conditions.Count && (int)create_conditions[next - 1] <= (int)condition) {
+                        pos = next;
+                    }
+                }
+                // Check if Item already exists
+                if (pos - 1 >= 0 && create_conditions[pos - 1] == condition) {
+                    return false;
+                }
+                else {
+                    create_conditions.Insert(pos, condition);
+                    create_condition.Clear();
+                    return true;
+                }
+            }
+            return false;
         }
         public void Create_RemoveCondition() {
-
+            if(create_conditions.Count > 0) {
+                create_conditions.RemoveAt(create_conditions.Count - 1);
+            }
         }
         public void Create_AddNote() {
-
+            create_notes.Add(create_note.GetValue());
+            create_note.Clear();
         }
         public void Create_RemoveNote() {
-
+            if(create_notes.Count > 0) {
+                create_notes.RemoveAt(create_notes.Count - 1);
+            }
         }
         public void Create_AddDescriptionLine() {
-
+            create_descriptionLines.Add(create_description.GetValue());
+            create_description.Clear();
         }
         public void Create_RemoveDescriptionLine() {
+            if(create_descriptionLines.Count > 0) {
+                create_descriptionLines.RemoveAt(create_descriptionLines.Count - 1);
+            }
+        }
 
+        // TODO!!!
+        public void Create_CreateActor() {
+            
         }
     }
 
     partial class Output
     {
+        private static int AddField(this Screen screen, string argName, InputField argField, bool isActive, int left, int top, WarnType warnType) {
+            int x = left;
+            // Add Active 
+            if (isActive) {
+                screen.AddFormattedLine("► ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                x += 2;
+            }
+            else {
+                screen.AddFormattedLine("  ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                x += 2;
+            }
+            // Add Arg Name
+            screen.AddFormattedLine(argName, ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+            x += argName.Length;
+            // Add Arg Value
+            x += argField.AddPrinting(screen, x, top, warnType);
+            return x - left;
+        }
+        private static int AddButton(this Screen screen, string buttonName, bool isActive, int left, int top, bool putWarn) {
+            int x = left;
+            // Add Active 
+            if (isActive) {
+                screen.AddFormattedLine("► ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                x += 2;
+            }
+            else {
+                screen.AddFormattedLine("  ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                x += 2;
+            }
+            // Add Arg Name
+            screen.AddFormattedLine(buttonName, ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+            x += buttonName.Length;
+            // Add Warn
+            if (putWarn) {
+                string warnString = " !";
+                screen.AddFormattedLine(warnString, ConsoleColor.Red, ConsoleColor.Black, x, int.MaxValue, top);
+                x += warnString.Length;
+            }
+            return x - left;
+        }
+        
+        private const int CreateTopBorder = 0;
+        private const int CreateLeftBorder = 0;
+        private const int CreateIndent = 1;
         private static Screen GetScreen_Create() {
             int width = Console.WindowWidth;
             int height = Console.WindowHeight;
-            return Screen.MonoColor(width, height, ConsoleColor.Yellow);
+            Screen screen = Screen.Default(width, height);
+
+            // Add Fields
+            int top = CreateTopBorder;
+            screen.AddButton("[Clear Data]", Program.outputData.create_activeNode == CreateNode.Clear, 
+                CreateLeftBorder, top, false);
+            top += 2;
+            screen.AddField("Name=", Program.outputData.create_name, Program.outputData.create_activeNode == CreateNode.Name, 
+                CreateLeftBorder, top, WarnType.AllowEmpty);
+            top += 2;
+            // INI, Speed, AC
+            screen.AddField("INI=", Program.outputData.create_ini, Program.outputData.create_activeNode == CreateNode.INI, 
+                CreateLeftBorder, top, Program.outputData.create_check_noScores ? WarnType.ForbidEmpty : WarnType.AllowEmpty);
+            ++top;
+            screen.AddField("Speed=", Program.outputData.create_speed, Program.outputData.create_activeNode == CreateNode.Speed, 
+                CreateLeftBorder, top, WarnType.AllowEmpty);
+            ++top;
+            screen.AddField("AC=", Program.outputData.create_ac, Program.outputData.create_activeNode == CreateNode.AC, 
+                CreateLeftBorder, top, WarnType.AllowEmpty);
+            ++top;
+            // HP
+            {
+                int left = CreateLeftBorder;
+                left += screen.AddField("HP=", Program.outputData.create_hp, Program.outputData.create_activeNode == CreateNode.HP, 
+                    left, top, WarnType.ForbidEmpty);
+                left += CreateIndent;
+                screen.AddField("Temp=", Program.outputData.create_temp, Program.outputData.create_activeNode == CreateNode.Temp, 
+                    left, top, WarnType.AllowEmpty);
+            }
+            top += 2;
+            // Coloring
+            {
+                int left = CreateLeftBorder;
+                left += screen.AddField("Coloring=", Program.outputData.create_coloring, Program.outputData.create_activeNode == CreateNode.ColoringType, 
+                    left, top, Program.outputData.create_check_noColors ? (Program.outputData.create_check_coloringValid ? WarnType.AllowEmpty : WarnType.ForceWarn) : WarnType.ExpectEmpty);
+                left += CreateIndent;
+                screen.AddField("Remove=", Program.outputData.create_remove, Program.outputData.create_activeNode == CreateNode.Remove, 
+                    left, top, WarnType.AllowEmpty);
+            }
+            ++top;
+            {
+                int left = CreateLeftBorder;
+                left += screen.AddField("Base_Text=", Program.outputData.create_base_text, Program.outputData.create_activeNode == CreateNode.Coloring_BaseText,
+                    left, top, Program.outputData.create_check_noColors ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("Base_BG=", Program.outputData.create_base_bg, Program.outputData.create_activeNode == CreateNode.Coloring_BaseBG,
+                    left, top, Program.outputData.create_check_noColors ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("Active_Text=", Program.outputData.create_active_text, Program.outputData.create_activeNode == CreateNode.Coloring_ActiveText,
+                    left, top, Program.outputData.create_check_noColors ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("Actie_BG=", Program.outputData.create_active_bg, Program.outputData.create_activeNode == CreateNode.Coloring_ActiveBG,
+                    left, top, Program.outputData.create_check_noColors ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+            }
+            top += 2;
+            // Scores
+            {
+                int left = CreateLeftBorder;
+                left += screen.AddField("STR=", Program.outputData.create_score_str, Program.outputData.create_activeNode == CreateNode.Score_Str,
+                    left, top, Program.outputData.create_check_noScores ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("DEX=", Program.outputData.create_score_dex, Program.outputData.create_activeNode == CreateNode.Score_Dex,
+                    left, top, Program.outputData.create_check_noScores ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("CON=", Program.outputData.create_score_con, Program.outputData.create_activeNode == CreateNode.Score_Con,
+                    left, top, Program.outputData.create_check_noScores ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("INT=", Program.outputData.create_score_int, Program.outputData.create_activeNode == CreateNode.Score_Int,
+                    left, top, Program.outputData.create_check_noScores ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("WIS=", Program.outputData.create_score_wis, Program.outputData.create_activeNode == CreateNode.Score_Wis,
+                    left, top, Program.outputData.create_check_noScores ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+                left += CreateIndent;
+                left += screen.AddField("CHA=", Program.outputData.create_score_cha, Program.outputData.create_activeNode == CreateNode.Score_Cha,
+                    left, top, Program.outputData.create_check_noScores ? WarnType.AllowEmpty : WarnType.ForbidEmpty);
+            }
+            top += 2;
+            // Attacks
+            // TODO: Write down old attacks
+            // Attack
+            screen.AddField("Attack_Name=", Program.outputData.create_attack_name, Program.outputData.create_activeNode == CreateNode.Attack_Name,
+                CreateLeftBorder, top, WarnType.AllowEmpty);
+            ++top;
+            {
+                int left = CreateLeftBorder;
+                left += screen.AddField("Atk=", Program.outputData.create_attack_atk, Program.outputData.create_activeNode == CreateNode.Attack_Atk,
+                    left, top, Program.outputData.create_attack_mod.IsEmpty() ? WarnType.ForbidEmpty : WarnType.ExpectEmpty);
+                left += CreateIndent;
+                left += screen.AddField("Mod=", Program.outputData.create_attack_mod, Program.outputData.create_activeNode == CreateNode.Attack_Mod,
+                    left, top, Program.outputData.create_attack_atk.IsEmpty() ? WarnType.ForbidEmpty : WarnType.ExpectEmpty);
+                left += CreateIndent;
+                left += screen.AddField("Dmg=", Program.outputData.create_attack_dmg, Program.outputData.create_activeNode == CreateNode.Attack_Dmg,
+                    left, top, WarnType.ForbidEmpty);
+                left += CreateIndent;
+            }
+            top += 2;
+            // Conditions
+            if(Program.outputData.create_conditions.Count > 0) {
+                StringBuilder conditions = new StringBuilder(Program.outputData.create_conditions[0].GetName());
+                for (int index = 1; index < Program.outputData.create_conditions.Count; ++index) {
+                    conditions.Append(", ");
+                    conditions.Append(Program.outputData.create_conditions[index].GetName());
+                }
+                top += screen.AddFormattedLines(new List<string> { conditions.ToString() },
+                    ConsoleColor.White, ConsoleColor.Black, CreateLeftBorder, screen.Width, top);
+            }
+            // Condition
+            screen.AddField("Condition=", Program.outputData.create_condition, Program.outputData.create_activeNode == CreateNode.Condition,
+                CreateLeftBorder, top, (Program.outputData.create_condition.HasValue() && !Program.outputData.create_conditions.Contains(Program.outputData.create_condition.GetValue())) ? WarnType.ForceWarn : WarnType.ForbidEmpty);
+            top += 2;
+
+            // TODO: Notes
+
+            // Note
+            screen.AddField("Note=", Program.outputData.create_note, Program.outputData.create_activeNode == CreateNode.Note,
+                CreateLeftBorder, top, WarnType.AllowEmpty);
+            top += 2;
+
+            // TODO: Description Lines
+
+            // Description Line
+            screen.AddField("Description=", Program.outputData.create_description, Program.outputData.create_activeNode == CreateNode.Description,
+                CreateLeftBorder, top, WarnType.AllowEmpty);
+            top += 2;
+
+            // Create Button
+            screen.AddButton("[Create Actor]", Program.outputData.create_activeNode == CreateNode.Create,
+                CreateLeftBorder, top, !Program.outputData.create_check_all);
+
+            return screen;
         }
     }
 
@@ -661,21 +1041,28 @@ namespace InitiativeTracker
             // Check other Keys
             switch (keyInfo.Key) {
                 case MoveNodeDown:
-                    Program.outputData.create_currentNode = Program.outputData.create_currentNode.MoveDown();
+                    Program.outputData.create_activeNode = Program.outputData.create_activeNode.MoveDown();
                     return;
                 case MoveNodeUp:
-                    Program.outputData.create_currentNode = Program.outputData.create_currentNode.MoveUp();
+                    Program.outputData.create_activeNode = Program.outputData.create_activeNode.MoveUp();
                     return;
                 case MoveNodeLeft:
-                    Program.outputData.create_currentNode = Program.outputData.create_currentNode.MoveLeft();
+                    Program.outputData.create_activeNode = Program.outputData.create_activeNode.MoveLeft();
                     return;
                 case MoveNodeRight:
-                    Program.outputData.create_currentNode = Program.outputData.create_currentNode.MoveRight();
+                    Program.outputData.create_activeNode = Program.outputData.create_activeNode.MoveRight();
                     return;
             }
 
             // Check Node Dependant - TODO: add Confirm Checks where needed and Escape Checks as well
-            switch (Program.outputData.create_currentNode) {
+            switch (Program.outputData.create_activeNode) {
+                case CreateNode.Clear:
+                    switch (keyInfo.Key) {
+                        case Confirm:
+                            Program.outputData.Create_ClearData();
+                            break;
+                    }
+                    break;
                 case CreateNode.Name:
                     switch (keyInfo.Key) {
                         case Clear:
@@ -1044,6 +1431,11 @@ namespace InitiativeTracker
                     }
                     break;
                 case CreateNode.Create:
+                    switch (keyInfo.Key) {
+                        case Confirm:
+                            Program.outputData.Create_CreateActor();
+                            break;
+                    }
                     break;
                 default:
                     return;

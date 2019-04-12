@@ -31,7 +31,7 @@ namespace InitiativeTracker
                 ++top;
             }
             if(Program.data.loadedGroups.Count > 0) {
-                AddHorizontalLine(screen, left - 1, top);
+                AddPartialHLine(screen, left - 1, top);
                 ++top;
             }
             // Add Actors
@@ -45,7 +45,7 @@ namespace InitiativeTracker
                 ++top;
             }
             if (Program.data.loadedActors.Count > 0) {
-                AddHorizontalLine(screen, left - 1, top);
+                AddPartialHLine(screen, left - 1, top);
                 ++top;
             }
             // Add Reload
@@ -62,7 +62,7 @@ namespace InitiativeTracker
             Screen screen = Screen.Default(width, height);
             int separatorPos = GetSeparatorPos(width);
 
-            AddDoubleVerticalLine(screen, separatorPos);
+            AddDoubleVLine(screen, separatorPos);
             AddInitiativeList(screen, separatorPos);
             AddSelection(screen, separatorPos + 1);
             return screen;

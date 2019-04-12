@@ -139,6 +139,12 @@ namespace InitiativeTracker
         public string name;
         public List<Token> attack;
         public List<Token> damage;
+
+        public Attack(string name, List<Token> attack, List<Token> damage) {
+            this.name = name;
+            this.attack = attack;
+            this.damage = damage;
+        }
     }
 
     public enum Condition : int
@@ -280,7 +286,7 @@ namespace InitiativeTracker
                 return false;
             }
             conditions.Insert(pos, condition);
-            return false;
+            return true;
         }
         /// <summary>
         /// Return whether Condition was added

@@ -175,13 +175,13 @@ namespace InitiativeTracker
         private const int InfoLeftIndent = 1;
         private const int InfoRightBorder = 1;
         private const int InfoTopBorder = 1;
-        private static void AddActorInfo(Screen screen, int left, Actor actor) {
+        private static void AddActorInfo(this Screen screen, int left, Actor actor) {
             int top = InfoTopBorder;
             // Add Name
             screen.AddFormattedLine("Actor '" + actor.name + "'", ConsoleColor.White, ConsoleColor.Black, left + InfoLeftBorder, int.MaxValue, top);
             ++top;
             // End with double Line
-            AddDoubleHorizontalLine(screen, left - 1, top);
+            screen.AddPartialDoubleHLine(left - 1, top);
             ++top;
             // Base Information
             string baseInfo;
@@ -210,7 +210,7 @@ namespace InitiativeTracker
             // Scores
             if (actor.scores.HasValue) {
                 // Start with Line
-                AddHorizontalLine(screen, left - 1, top);
+                screen.AddPartialHLine(left - 1, top);
                 ++top;
 
                 string strString = actor.scores.Value.strength.ToString() + "(" + actor.scores.Value.strengthModifier.ToSignedString() + ")";
@@ -245,7 +245,7 @@ namespace InitiativeTracker
             // Attacks
             if (actor.attacks.Count != 0) {
                 // Start with Line
-                AddHorizontalLine(screen, left - 1, top);
+                screen.AddPartialHLine(left - 1, top);
                 ++top;
 
                 for (int index = 0; index < actor.attacks.Count; ++index) {
@@ -260,7 +260,7 @@ namespace InitiativeTracker
             }
 
             // End with Double Line
-            AddDoubleHorizontalLine(screen, left - 1, top);
+            screen.AddPartialDoubleHLine(left - 1, top);
             ++top;
 
             // Conditions, Notes, Description
@@ -292,7 +292,7 @@ namespace InitiativeTracker
             }
             if(actor.notes.Count > 0) {
                 if (!topLineExists) {
-                    AddHorizontalLine(screen, left - 1, top);
+                    screen.AddPartialHLine(left - 1, top);
                     ++top;
                 }
                 for(int pos = 0; pos < actor.notes.Count; ++pos) {
@@ -310,7 +310,7 @@ namespace InitiativeTracker
             // Dont forget them lines!
             if (actor.description.HasValue) {
                 if (!topLineExists) {
-                    AddHorizontalLine(screen, left - 1, top);
+                    screen.AddPartialHLine(left - 1, top);
                     ++top;
                 }
                 screen.AddFormattedLines(actor.description.Value, ConsoleColor.White, ConsoleColor.Black, left + InfoLeftBorder, screen.Width, top);
@@ -320,7 +320,7 @@ namespace InitiativeTracker
         }
         
         
-        private static void AddOperationInfo(Screen screen) {
+        private static void AddOperationInfo(this Screen screen) {
             int left = 0;
             string opString = "OP=" + Program.outputData.info_opMode.GetName() + ",ARG=";
             screen.AddFormattedLine(opString, ConsoleColor.White, ConsoleColor.Black, left, int.MaxValue, screen.Height - 1);
@@ -367,12 +367,12 @@ namespace InitiativeTracker
             Screen screen = Screen.Default(width, height);
             int separatorPos = GetSeparatorPos(width);
 
-            AddDoubleVerticalLine(screen, separatorPos);
-            AddInitiativeList(screen, separatorPos);
-            AddOperationInfo(screen);
+            screen.AddDoubleVLine(separatorPos);
+            screen.AddInitiativeList(separatorPos);
+            screen.AddOperationInfo();
 
             if (Program.data.idList.Count != 0) {
-                AddActorInfo(screen, separatorPos + 1, Program.data.GetActor(Program.data.idList[Program.outputData.Info_GetSelected()]));
+                screen.AddActorInfo(separatorPos + 1, Program.data.GetActor(Program.data.idList[Program.outputData.Info_GetSelected()]));
             }
             return screen;
         }
@@ -591,8 +591,9 @@ namespace InitiativeTracker
                                 // Add Condition
                                 var condition = Program.outputData.Info_GetArgument().GetCondition();
                                 if (condition.HasValue) {
-                                    actor.AddCondition(condition.Value);
-                                    Program.outputData.Info_Argument_Clear();
+                                    if (actor.AddCondition(condition.Value)) {
+                                        Program.outputData.Info_Argument_Clear();
+                                    }
                                 }
                             }
                             return;
