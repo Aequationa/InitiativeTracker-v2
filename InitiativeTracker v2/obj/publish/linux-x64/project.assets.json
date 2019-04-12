@@ -1513,7 +1513,7 @@
     "version": "1.0.0",
     "restore": {
       "projectUniqueName": "C:\\Users\\Sebastian Ohrem\\Documents\\InitiativeTracker v2\\InitiativeTracker v2\\InitiativeTracker v2.csproj",
-      "projectName": "InitiativeTracker v2",
+      "projectName": "InitiativeTracker",
       "projectPath": "C:\\Users\\Sebastian Ohrem\\Documents\\InitiativeTracker v2\\InitiativeTracker v2\\InitiativeTracker v2.csproj",
       "packagesPath": "C:\\Users\\Sebastian Ohrem\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\Sebastian Ohrem\\Documents\\InitiativeTracker v2\\InitiativeTracker v2\\obj\\publish\\linux-x64\\",
