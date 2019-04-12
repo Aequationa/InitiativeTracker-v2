@@ -1,6 +1,1 @@
-﻿autocomplete 'default' & autocomplete 
-correct condition check in create mode will be wanted/needed
-tostring for list of tokens
-create custon contitions class, should be neat
-
-save to .xml from create screen (without validity checks!)
+﻿

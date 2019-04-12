@@ -126,7 +126,7 @@ namespace InitiativeTracker
                     case Info_OpMode.GainHealth:
                     case Info_OpMode.GainTemp:
                         var tokens = ObjectParser.GetTokens(info_argumentString);
-                        info_argument_valid = tokens.HasValue && ObjectParser.ValidateTokens(tokens.Value);
+                        info_argument_valid = tokens.HasValue && tokens.Value.Validate();
                         info_argument_condition = Option<Condition>.Null;
                         return;
                     case Info_OpMode.Remove:

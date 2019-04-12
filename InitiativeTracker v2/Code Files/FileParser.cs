@@ -293,7 +293,7 @@ namespace InitiativeTracker
                             return scores;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Scores] Unable to Interpret: " + attributeName;
                             return scores;
                         }
@@ -306,7 +306,7 @@ namespace InitiativeTracker
                             return scores;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Scores] Unable to Interpret: " + attributeName;
                             return scores;
                         }
@@ -319,7 +319,7 @@ namespace InitiativeTracker
                             return scores;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Scores] Unable to Interpret: " + attributeName;
                             return scores;
                         }
@@ -332,7 +332,7 @@ namespace InitiativeTracker
                             return scores;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Scores] Unable to Interpret: " + attributeName;
                             return scores;
                         }
@@ -345,7 +345,7 @@ namespace InitiativeTracker
                             return scores;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Scores] Unable to Interpret: " + attributeName;
                             return scores;
                         }
@@ -358,7 +358,7 @@ namespace InitiativeTracker
                             return scores;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Scores] Unable to Interpret: " + attributeName;
                             return scores;
                         }
@@ -422,7 +422,7 @@ namespace InitiativeTracker
                             return attack;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Attack] Unable to Interpret: " + attributeName;
                             return attack;
                         }
@@ -435,7 +435,7 @@ namespace InitiativeTracker
                             return attack;
                         }
                         var tokens = ObjectParser.GetTokens("D20+" + attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Attack] Unable to Interpret: " + attributeName;
                             return attack;
                         }
@@ -448,7 +448,7 @@ namespace InitiativeTracker
                             return attack;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Attack] Unable to Interpret: " + attributeName;
                             return attack;
                         }
@@ -524,7 +524,7 @@ namespace InitiativeTracker
                             return actor;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Actor] Unable to Interpret: " + attributeName;
                             return actor;
                         }
@@ -537,7 +537,7 @@ namespace InitiativeTracker
                             return actor;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Actor] Unable to Interpret: " + attributeName;
                             return actor;
                         }
@@ -550,7 +550,7 @@ namespace InitiativeTracker
                             return actor;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Actor] Unable to Interpret: " + attributeName;
                             return actor;
                         }
@@ -571,7 +571,7 @@ namespace InitiativeTracker
                             return actor;
                         }
                         var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !ObjectParser.ValidateTokens(tokens.Value)) {
+                        if (!tokens.HasValue || !tokens.Value.Validate()) {
                             errorMessage = "[Actor] Unable to Interpret: " + attributeName;
                             return actor;
                         }
@@ -868,6 +868,40 @@ namespace InitiativeTracker
 
             Program.screenWriter.Write(Output.GetSuccessfulLoadingScreen(errorMessages, true));
             return true;
+        }
+
+        public static void WriteToXML(XElement element, string path, out string errorMessage) {
+            if(Path.GetExtension(path) != ".xml") {
+                errorMessage = "[Saving] Bad Path Extension";
+                return;
+            }
+            XDocument document;
+            if (File.Exists(path)) {
+                try {
+                    document = XDocument.Load(path);
+                }
+                catch(Exception readEx) {
+                    errorMessage = "[Saving] Encountered Issue when Loading: " + readEx.ToString();
+                    return;
+                }
+                document.Root.Add(element);
+            }
+            else {
+                document = new XDocument();
+                document.Declaration = new XDeclaration("1.0", "utf-8", "yes");
+                document.Add(new XElement("root", element));
+                // Create new
+            }
+
+            try {
+                document.Save(path);
+            }
+            catch (Exception saveEx) {
+                errorMessage = "[Saving] Encountered Issue when Saving: " + saveEx.ToString();
+                return;
+            }
+
+            errorMessage = null;
         }
     }
 }

@@ -279,12 +279,12 @@ namespace InitiativeTracker
         }
         
         
-        private static bool ValidateTokens(List<Token> tokens, int start, int end) {
+        private static bool Validate(this List<Token> tokens, int start, int end) {
             // Check (...) and create a List of simple Tokens without (...)
             List<Token> simpleTokens = new List<Token>();
             for (int index = start; index < end;) {
                 if (tokens[index].type == TokenType.Bracket) {
-                    if (!ValidateTokens(tokens, index + 1, tokens[index].value)) {
+                    if (!tokens.Validate(index + 1, tokens[index].value)) {
                         return false;
                     }
                     simpleTokens.Add(new Token(TokenType.Integer));
@@ -352,8 +352,8 @@ namespace InitiativeTracker
         /// <summary>
         /// Returns whether Tokens can be evaluated
         /// </summary>
-        public static bool ValidateTokens(List<Token> tokens) {
-            return ValidateTokens(tokens, 0, tokens.Count);
+        public static bool Validate(this List<Token> tokens) {
+            return tokens.Validate(0, tokens.Count);
         }
 
         private static Option<int> Evaluate(this List<Token> tokens, int start, int end) {
