@@ -751,8 +751,8 @@ namespace InitiativeTracker
             try {
                 text = File.ReadAllLines(path);
             }
-            catch (Exception) {
-                errorMessage = "[Settings] Encountered Issue when loading from '" + path + "'";
+            catch (Exception exception) {
+                errorMessage = "[Settings] Encountered Issue when Loading: " + exception;
                 return default;
             }
             return ReadSettings(text, out errorMessage);
@@ -849,7 +849,7 @@ namespace InitiativeTracker
             try {
                 var coloringPaths = Directory.GetFiles(folderDir + @"\Colorings", "*.xml", SearchOption.TopDirectoryOnly);
                 for (int index = 0; index < coloringPaths.Length; ++index) {
-                    FileParser.GetColorings(coloringPaths[index], ref Program.data.loadedColorings, ref errorMessages);
+                    GetColorings(coloringPaths[index], ref Program.data.loadedColorings, ref errorMessages);
                 }
             }
             catch (Exception) {
@@ -859,7 +859,7 @@ namespace InitiativeTracker
             try {
                 var actorPaths = Directory.GetFiles(folderDir + @"\Actors", "*.xml", SearchOption.TopDirectoryOnly);
                 for (int index = 0; index < actorPaths.Length; ++index) {
-                    FileParser.GetActors(actorPaths[index], ref Program.data.loadedActors, ref Program.data.loadedGroups, ref errorMessages);
+                    GetActors(actorPaths[index], ref Program.data.loadedActors, ref Program.data.loadedGroups, ref errorMessages);
                 }
             }
             catch (Exception) {

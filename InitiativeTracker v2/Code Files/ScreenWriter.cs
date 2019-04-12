@@ -179,12 +179,12 @@ namespace InitiativeTracker
                 Console.CursorVisible = false;
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.Clear();
-                Console.SetWindowSize(screen.Width, screen.Height);
-                Console.SetBufferSize(screen.Width, screen.Height);
+                Console.WindowWidth = screen.Width;
+                Console.WindowHeight = screen.Height;
+                Console.BufferWidth = screen.Width;
+                Console.BufferHeight = screen.Height;
             }
-            catch (Exception) {
-                return;
-            }
+            catch (Exception) { }
 
             int width = screen.Width;
             int height = screen.Height;
@@ -230,10 +230,13 @@ namespace InitiativeTracker
                                     text[index - start] = screen[index, y].c;
                                 }
                             }
-                            Console.SetCursorPosition(start, y);
-                            Console.ForegroundColor = foreground;
-                            Console.BackgroundColor = background;
-                            Console.Write(text);
+                            try {
+                                Console.SetCursorPosition(start, y);
+                                Console.ForegroundColor = foreground;
+                                Console.BackgroundColor = background;
+                                Console.Write(text);
+                            }
+                            catch (Exception) { }
 
                             // Check if we need to Start anew
                             if (screen[x, y].IsSolid(ConsoleColor.Black)) {
@@ -261,10 +264,13 @@ namespace InitiativeTracker
                             text[index - start] = screen[index, y].c;
                         }
                     }
-                    Console.SetCursorPosition(start, y);
-                    Console.ForegroundColor = foreground;
-                    Console.BackgroundColor = background;
-                    Console.Write(text);
+                    try {
+                        Console.SetCursorPosition(start, y);
+                        Console.ForegroundColor = foreground;
+                        Console.BackgroundColor = background;
+                        Console.Write(text);
+                    }
+                    catch (Exception) { }
                 }
             }
         }
@@ -320,10 +326,13 @@ namespace InitiativeTracker
                                     text[index - start] = screen[index, y].c;
                                 }
                             }
-                            Console.SetCursorPosition(start, y);
-                            Console.ForegroundColor = foreground;
-                            Console.BackgroundColor = background;
-                            Console.Write(text);
+                            try {
+                                Console.SetCursorPosition(start, y);
+                                Console.ForegroundColor = foreground;
+                                Console.BackgroundColor = background;
+                                Console.Write(text);
+                            }
+                            catch (Exception) { }
 
                             // Check if we need to Start anew
                             if (screen[x, y].IsIndistinguishable(old[x, y])) {
@@ -351,10 +360,13 @@ namespace InitiativeTracker
                             text[index - start] = screen[index, y].c;
                         }
                     }
-                    Console.SetCursorPosition(start, y);
-                    Console.ForegroundColor = foreground;
-                    Console.BackgroundColor = background;
-                    Console.Write(text);
+                    try {
+                        Console.SetCursorPosition(start, y);
+                        Console.ForegroundColor = foreground;
+                        Console.BackgroundColor = background;
+                        Console.Write(text);
+                    }
+                    catch (Exception) { }
                 }
             }
         }
