@@ -752,7 +752,7 @@ namespace InitiativeTracker
                 text = File.ReadAllLines(path);
             }
             catch (Exception exception) {
-                errorMessage = "[Settings] Encountered Issue when Loading: " + exception;
+                errorMessage = "[Settings] Encountered Issue when Loading Settings: " + exception;
                 return default;
             }
             return ReadSettings(text, out errorMessage);
@@ -766,8 +766,8 @@ namespace InitiativeTracker
             try {
                 root = XDocument.Load(path).Root;
             }
-            catch (Exception) {
-                errorMessages.Add("[Colorings] Encountered Issue when loading from '" + path + "'");
+            catch (Exception ex) {
+                errorMessages.Add("[Colorings] Encountered issue when Loading from " + path + ": " + ex.ToString());
                 return;
             }
 
@@ -789,8 +789,8 @@ namespace InitiativeTracker
             try {
                 root = XDocument.Load(path).Root;
             }
-            catch (Exception) {
-                errorMessages.Add("[Actors] Encountered Issue when loading from '" + path + "'");
+            catch (Exception ex) {
+                errorMessages.Add("[Actors] Encountered Issue when loading from " + path + ": " + ex.ToString());
                 return;
             }
 
@@ -833,11 +833,8 @@ namespace InitiativeTracker
         public static bool Load(bool loadSettings) {
             var folderDir = GetFolderDirectory();
             if (loadSettings) {
-                // Temporary Settings required in case loading Settings fails
-                Program.settings.tabWidth = 4;
-
                 // Load Settings
-                Program.settings = GetSettings(folderDir + @"\Settings\settings.txt", out string settingsError);
+                Program.settings = GetSettings(Path.Combine(folderDir, "Settings", "settings.txt"), out string settingsError);
                 if (settingsError != null) {
                     Program.screenWriter.Write(Output.GetFatalErrorLoadingScreen(settingsError));
                     return false;
@@ -847,23 +844,23 @@ namespace InitiativeTracker
             var errorMessages = new List<string>();
             // Load Colorings
             try {
-                var coloringPaths = Directory.GetFiles(folderDir + @"\Colorings", "*.xml", SearchOption.TopDirectoryOnly);
+                var coloringPaths = Directory.GetFiles(Path.Combine(folderDir, "Colorings"), "*.xml", SearchOption.TopDirectoryOnly);
                 for (int index = 0; index < coloringPaths.Length; ++index) {
                     GetColorings(coloringPaths[index], ref Program.data.loadedColorings, ref errorMessages);
                 }
             }
-            catch (Exception) {
-                errorMessages.Add("[Colorings] Encountered Issue when loading from '" + folderDir + @"\Colorings'");
+            catch (Exception coloringEx) {
+                errorMessages.Add("[Colorings] Encountered Issue when Loading Colorings: '" + coloringEx.ToString());
             }
             // Load Actors
             try {
-                var actorPaths = Directory.GetFiles(folderDir + @"\Actors", "*.xml", SearchOption.TopDirectoryOnly);
+                var actorPaths = Directory.GetFiles(Path.Combine(folderDir, "Actors"), "*.xml", SearchOption.TopDirectoryOnly);
                 for (int index = 0; index < actorPaths.Length; ++index) {
                     GetActors(actorPaths[index], ref Program.data.loadedActors, ref Program.data.loadedGroups, ref errorMessages);
                 }
             }
-            catch (Exception) {
-                errorMessages.Add("[Actors] Encountered Issue when loading from '" + folderDir + @"\Actors'");
+            catch (Exception actorEx) {
+                errorMessages.Add("[Actors] Encountered Issue when loading Actors: " + actorEx.ToString());
             }
 
             Program.screenWriter.Write(Output.GetSuccessfulLoadingScreen(errorMessages, true));
