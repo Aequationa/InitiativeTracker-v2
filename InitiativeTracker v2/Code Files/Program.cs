@@ -14,10 +14,23 @@ namespace InitiativeTracker
         public const int SleepDelta = 10;
 
         static void Main(string[] args) {
-            Console.Title = "InitiativeTracker";
-            Console.OutputEncoding = System.Text.Encoding.Unicode;
-            Console.TreatControlCAsInput = true;
-            Console.CancelKeyPress += CancelKeyPressHandler;
+            try {
+                Console.Title = "InitiativeTracker";
+            }
+            catch (Exception) { }
+            try {
+                Console.OutputEncoding = System.Text.Encoding.Unicode;
+            }
+            catch (Exception) { }
+            try {
+                Console.TreatControlCAsInput = true;
+            }
+            catch (Exception) { }
+            try {
+                Console.CancelKeyPress += CancelKeyPressHandler;
+            }
+            catch (Exception) { }
+            
             bool success = FileParser.Load(true);
             // Proceed on Button Press
             while (!Console.KeyAvailable) {

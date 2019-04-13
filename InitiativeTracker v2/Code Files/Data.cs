@@ -8,6 +8,9 @@ namespace InitiativeTracker
         public bool defaultRemove;
         public int defaultType;
         public int tabWidth;
+        public bool resizeConsole;
+        public bool resizeBuffer;
+        public bool useSpecial;
     }
 
     public abstract class Change

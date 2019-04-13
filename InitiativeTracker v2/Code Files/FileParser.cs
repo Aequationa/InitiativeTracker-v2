@@ -11,7 +11,7 @@ namespace InitiativeTracker
         private static Settings ReadSettings(string[] text, out string errorMessage) {
             Settings settings = new Settings();
 
-            if(text.Length < 4) {
+            if(text.Length < 7) {
                 errorMessage = "[Settings] Not enough Arguments";
                 return settings;
             }
@@ -56,18 +56,57 @@ namespace InitiativeTracker
                 errorMessage = "[Settings] Argument not found: tabWidth";
                 return settings;
             }
-            for (int index = 0; index < tabWidthString.Length; ++index) {
-                if (text[3][index] != tabWidthString[index]) {
-                    errorMessage = "[Settings] Argument not found: tabWidth";
-                    return settings;
-                }
-            }
             var tabWidth = ObjectParser.GetInt10(text[3], tabWidthString.Length, text[3].Length);
             if (!tabWidth.HasValue) {
                 errorMessage = "[Settings] Unable to Interpret: tabWidth";
                 return settings;
             }
             settings.tabWidth = tabWidth.Value;
+
+            // Resive Console
+            var resizeConsoleString = "resizeConsole=";
+            if (!text[4].StartsWith(resizeConsoleString)) {
+                errorMessage = "[Settings] Argument not found: resizeConsole";
+                return settings;
+            }
+            var resizeConsole = ObjectParser.GetBoolean(text[4].Substring(resizeConsoleString.Length));
+            if (!resizeConsole.HasValue) {
+                errorMessage = "[Settings] Unable to Interpret: resizeConsole";
+                return settings;
+            }
+            settings.resizeConsole = resizeConsole.Value;
+
+            // Resive Buffer
+            var resizeBufferString = "resizeBuffer=";
+            if (!text[5].StartsWith(resizeBufferString)) {
+                errorMessage = "[Settings] Argument not found: resizeBuffer";
+                return settings;
+            }
+            var resizeBuffer = ObjectParser.GetBoolean(text[5].Substring(resizeBufferString.Length));
+            if (!resizeBuffer.HasValue) {
+                errorMessage = "[Settings] Unable to Interpret: resizeBuffer";
+                return settings;
+            }
+            settings.resizeBuffer = resizeBuffer.Value;
+
+            // Use Special
+            var useSpecialString = "useSpecial=";
+            if (!text[6].StartsWith(useSpecialString)) {
+                errorMessage = "[Settings] Argument not found: useSpecial";
+                return settings;
+            }
+            var useSpecial = ObjectParser.GetBoolean(text[6].Substring(useSpecialString.Length));
+            if (!useSpecial.HasValue) {
+                errorMessage = "[Settings] Unable to Interpret: useSpecial";
+                return settings;
+            }
+            settings.useSpecial = useSpecial.Value;
+            /* = true
+resizeBuffer = true
+useSpecial = true*/
+
+
+
 
             // Return Settings
             errorMessage = null;

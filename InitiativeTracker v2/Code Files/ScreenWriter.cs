@@ -179,12 +179,23 @@ namespace InitiativeTracker
                 Console.CursorVisible = false;
                 Console.BackgroundColor = ConsoleColor.Black;
                 Console.Clear();
-                Console.WindowWidth = screen.Width;
-                Console.WindowHeight = screen.Height;
-                Console.BufferWidth = screen.Width;
-                Console.BufferHeight = screen.Height;
             }
             catch (Exception) { }
+
+            if (Program.settings.resizeConsole) {
+                try {
+                    Console.WindowWidth = screen.Width;
+                    Console.WindowHeight = screen.Height;
+                }
+                catch (Exception) { }
+            }
+            if (Program.settings.resizeBuffer) {
+                try {
+                    Console.BufferWidth = screen.Width;
+                    Console.BufferHeight = screen.Height;
+                }
+                catch (Exception) { }
+            }
 
             int width = screen.Width;
             int height = screen.Height;
@@ -278,9 +289,7 @@ namespace InitiativeTracker
             try {
                 Console.CursorVisible = false;
             }
-            catch (Exception) {
-                return;
-            }
+            catch (Exception) { }
 
             int width = screen.Width;
             int height = screen.Height;

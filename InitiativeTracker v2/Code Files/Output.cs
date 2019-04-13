@@ -89,48 +89,55 @@ namespace InitiativeTracker
         }
         private const ConsoleColor LineColor = ConsoleColor.Gray;
         private static void AddDoubleVLine(this Screen screen, int x) {
-            if(x >= 0 && x < screen.Width) {
+            char vertical = Program.settings.useSpecial ? '║' : '*';
+            if (x >= 0 && x < screen.Width) {
                 for(int pos = 0; pos < screen.Height; ++pos) {
-                    screen.SetC(x, pos, '║');
+                    screen.SetC(x, pos, vertical);
                     screen.SetForeground(x, pos, LineColor);
                 }
             }
         }
         private static void AddPartialDoubleHLine(this Screen screen, int x, int y) {
-            if(y >= 0 && y < screen.Height) {
+            char connect = Program.settings.useSpecial ? '╠' : '*';
+            char horizontal = Program.settings.useSpecial ? '═' : '*';
+            if (y >= 0 && y < screen.Height) {
                 if (x >= 0 && x < screen.Width) {
-                    screen.SetC(x, y, '╠');
+                    screen.SetC(x, y, connect);
                 }
                 for(int pos = Math.Max(0, x + 1); pos < screen.Width; ++pos) {
-                    screen.SetC(pos, y, '═');
+                    screen.SetC(pos, y, horizontal);
                     screen.SetForeground(pos, y, LineColor);
                 }
             }
         }
         private static void AddPartialHLine(this Screen screen, int x, int y) {
-            if(y >= 0 && y < screen.Height) {
+            char connect = Program.settings.useSpecial ? '╟' : '*';
+            char horizontal = Program.settings.useSpecial ? '─' : '*';
+            if (y >= 0 && y < screen.Height) {
                 if (x >= 0 && x < screen.Width) {
-                    screen.SetC(x, y, '╟');
+                    screen.SetC(x, y, connect);
                 }
                 for(int pos = Math.Max(0, x + 1); pos < screen.Width; ++pos) {
-                    screen.SetC(pos, y, '─');
+                    screen.SetC(pos, y, horizontal);
                     screen.SetForeground(pos, y, LineColor);
                 }
             }
         }
         private static void AddFullDoubleHLine(this Screen screen, int y) {
-            if(y >= 0 && y < screen.Height) {
+            char horizontal = Program.settings.useSpecial ? '═' : '*';
+            if (y >= 0 && y < screen.Height) {
                 for(int x = 0; x < screen.Width; ++x) {
-                    screen.SetC(x, y, '═');
+                    screen.SetC(x, y, horizontal);
                     screen.SetForeground(x, y, LineColor);
                     screen.SetBackground(x, y, ConsoleColor.Black);
                 }
             }
         }
         private static void AddFullHLine(this Screen screen, int y) {
+            char horizontal = Program.settings.useSpecial ? '─' : '*';
             if (y >= 0 && y < screen.Height) {
                 for (int x = 0; x < screen.Width; ++x) {
-                    screen.SetC(x, y, '─');
+                    screen.SetC(x, y, horizontal);
                     screen.SetForeground(x, y, LineColor);
                     screen.SetBackground(x, y, ConsoleColor.Black);
                 }
