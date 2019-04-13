@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Xml.Linq;
 
@@ -732,7 +733,7 @@ namespace InitiativeTracker
         }
 
         public void Create_Setup() {
-            create_savePath.Set(FileParser.GetFolderDirectory() + @"\Actors\");
+            create_savePath.Set(Path.Combine(FileParser.GetFolderDirectory(), "Actors"));
             Create_UpdateChecks();
         }
         
@@ -771,7 +772,7 @@ namespace InitiativeTracker
             create_descriptionLines.Clear();
             create_description.Clear();
 
-            create_savePath.Set(FileParser.GetFolderDirectory() + @"\Actors\");
+            create_savePath.Set(Path.Combine(FileParser.GetFolderDirectory(), "Actors"));
 
             Create_UpdateChecks();
         }
