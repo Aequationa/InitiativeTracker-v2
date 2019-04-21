@@ -53,7 +53,7 @@ namespace InitiativeTracker
         public Mode mode;
 
         public void Setup() {
-            mode = Mode.Create;
+            mode = Mode.Info;
             Info_Setup();
             Select_Setup();
             Create_Setup();

@@ -88,48 +88,59 @@ namespace InitiativeTracker
         /// <summary>
         /// Returns Scores for this Object, or Error Message
         /// </summary>
-        public Scores GetScores(out string errorMessage) {
+        public Scores GetScores(Action<string> AddError) {
             Scores scores = new Scores();
 
             var eval_strength = strength.Evaluate();
             if (!eval_strength.HasValue) {
-                errorMessage = "[Scores] Unable to Compute: str";
-                return default;
+                AddError("[Scores] Unable to Compute: str");
             }
-            scores.strength = eval_strength.Value;
-            var eval_dexterity = dexterity.Evaluate();
-            if (!eval_dexterity.HasValue) {
-                errorMessage = "[Scores] Unable to Compute: dex";
-                return default;
-            }
-            scores.dexterity = eval_dexterity.Value;
-            var eval_constitution = constitution.Evaluate();
-            if (!eval_constitution.HasValue) {
-                errorMessage = "[Scores] Unable to Compute: con";
-                return default;
-            }
-            scores.constitution = eval_constitution.Value;
-            var eval_intelligence = intelligence.Evaluate();
-            if (!eval_intelligence.HasValue) {
-                errorMessage = "[Scores] Unable to Compute: int";
-                return default;
-            }
-            scores.intelligence = eval_intelligence.Value;
-            var eval_wisdom = wisdom.Evaluate();
-            if (!eval_wisdom.HasValue) {
-                errorMessage = "[Scores] Unable to Compute: wis";
-                return default;
-            }
-            scores.wisdom = eval_wisdom.Value;
-            var eval_charisma = charisma.Evaluate();
-            if (!eval_charisma.HasValue) {
-                errorMessage = "[Scores] Unable to Compute: cha";
-                return default;
-            }
-            scores.charisma = eval_charisma.Value;
+            else {
+                scores.strength = eval_strength.Value;
 
-            errorMessage = null;
-            scores.CalculateModifiers();
+                var eval_dexterity = dexterity.Evaluate();
+                if (!eval_dexterity.HasValue) {
+                    AddError("[Scores] Unable to Compute: dex");
+                }
+                else {
+                    scores.dexterity = eval_dexterity.Value;
+
+                    var eval_constitution = constitution.Evaluate();
+                    if (!eval_constitution.HasValue) {
+                        AddError("[Scores] Unable to Compute: con");
+                    }
+                    else {
+                        scores.constitution = eval_constitution.Value;
+
+                        var eval_intelligence = intelligence.Evaluate();
+                        if (!eval_intelligence.HasValue) {
+                            AddError("[Scores] Unable to Compute: int");
+                        }
+                        else {
+                            scores.intelligence = eval_intelligence.Value;
+
+                            var eval_wisdom = wisdom.Evaluate();
+                            if (!eval_wisdom.HasValue) {
+                                AddError("[Scores] Unable to Compute: wis");
+                            }
+                            else {
+                                scores.wisdom = eval_wisdom.Value;
+
+                                var eval_charisma = charisma.Evaluate();
+                                if (!eval_charisma.HasValue) {
+                                    AddError("[Scores] Unable to Compute: cha");
+                                }
+                                else {
+                                    scores.charisma = eval_charisma.Value;
+
+                                    scores.CalculateModifiers();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             return scores;
         }
     }
@@ -503,32 +514,33 @@ namespace InitiativeTracker
         public Option<List<string>> description = Option<List<string>>.Null;
         public bool remove = Program.settings.defaultRemove;
 
-        public Actor CreateInstance(List<ColoringType> coloringTypes, out string errorMessage) {
+        public Actor CreateInstance(List<ColoringType> coloringTypes, List<string> errors) {
             Actor actor = new Actor();
             // Get Name
             actor.name = name;
             // Get HP Values
             var eval_HP = HP.Evaluate();
             if(!eval_HP.HasValue){
-                errorMessage = "[Actor, name='" + name + "'] Unable to Compute: hp";
-                return actor;
+                errors.Add("[Actor, name='" + name + "'] Unable to Compute: hp");
             }
-            actor.currentHP = eval_HP.Value;
-            actor.maximumHP = eval_HP.Value;
+            else {
+                actor.currentHP = eval_HP.Value;
+                actor.maximumHP = eval_HP.Value;
+            }
 
             if (temporary.HasValue) {
                 var eval_temporary = temporary.Value.Evaluate();
                 if (!eval_temporary.HasValue) {
-                    errorMessage = "[Actor, name='" + name + "'] Unable to Compute: temp";
-                    return actor;
+                    errors.Add("[Actor, name='" + name + "'] Unable to Compute: temp");
                 }
-                actor.temporaryHP = eval_temporary.Value;
+                else {
+                    actor.temporaryHP = eval_temporary.Value;
+                }
             }
             // Get Color Values
             if (coloring.HasValue) {
                 if (coloringType.HasValue) {
-                    errorMessage = "[Actor, name='" + name + "'] Ambiguity: Coloring is defined twice";
-                    return actor;
+                    errors.Add("[Actor, name='" + name + "'] Ambiguity: Coloring is defined twice");
                 }
                 else {
                     actor.base_text = coloring.Value.base_text;
@@ -558,46 +570,47 @@ namespace InitiativeTracker
                     }
                 }
                 if (!found) {
-                    errorMessage = "[Actor, name='" + name + "'] Coloring not found: " + targetColoringType;
-                    return actor;
+                    errors.Add("[Actor, name='" + name + "'] Coloring not found: " + targetColoringType);
                 }
             }
             // Get Armor Class
             if (armorClass.HasValue) {
                 var eval_armorClass = armorClass.Value.Evaluate();
                 if (!eval_armorClass.HasValue) {
-                    errorMessage = "[Actor, name='" + name + "'] Unable to Compute: ac";
-                    return actor;
+                    errors.Add("[Actor, name='" + name + "'] Unable to Compute: ac");
                 }
-                actor.armorClass = eval_armorClass.Value;
+                else {
+                    actor.armorClass = eval_armorClass.Value;
+                }
             }
             // Get Speed
             actor.speed = speed;
             // Get Scores
             if (scores.HasValue) {
-                var eval_scores = scores.Value.GetScores(out string scoresMessage);
-                if(scoresMessage != null) {
-                    errorMessage = "[Actor, name='" + name + "']" + scoresMessage;
-                    return actor;
+                void AddScoresError(string error) { errors.Add("[Actor, name='" + name + "']" + error); };
+
+                int errorCount = errors.Count;
+                var eval_scores = scores.Value.GetScores(AddScoresError);
+                if(errors.Count == errorCount) {
+                    actor.scores = eval_scores;
                 }
-                actor.scores = eval_scores;
             }
             // Get Intiative
             if (initiative.HasValue) {
                 var eval_initiative = initiative.Value.Evaluate();
                 if (!eval_initiative.HasValue) {
-                    errorMessage = "[Actor, name='" + name + "'] Unable to Compute: ini";
-                    return actor;
-                }
-                actor.initiative = eval_initiative.Value;
-            }
-            else {
-                if (actor.scores.HasValue) {
-                    actor.initiative = ObjectParser.Roll(1, 20) + actor.scores.Value.dexterityModifier;
+                    errors.Add("[Actor, name='" + name + "'] Unable to Compute: ini");
                 }
                 else {
-                    errorMessage = "[Actor, name='" + name + "'] Unable to Determine Value: ini";
-                    return actor;
+                    actor.initiative = eval_initiative.Value;
+                }
+            }
+            else {
+                if (!actor.scores.HasValue) {
+                    errors.Add("[Actor, name='" + name + "'] Unable to Determine Value: ini");
+                }
+                else {
+                    actor.initiative = ObjectParser.Roll(1, 20) + actor.scores.Value.dexterityModifier;
                 }
             }
             // Get Attacks, Description, Conditions 
@@ -617,7 +630,6 @@ namespace InitiativeTracker
             // Get Remove
             actor.remove = remove;
             
-            errorMessage = null;
             return actor;
         }
     }

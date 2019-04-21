@@ -138,7 +138,7 @@ namespace InitiativeTracker
                             return coloringType;
                         }
                         else {
-                            coloringType.name = attributeValue;
+                            coloringType.name = ObjectParser.FormatLine(attributeValue);
                             name_set = true;
                         }
                     }
@@ -631,7 +631,7 @@ namespace InitiativeTracker
                             AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
                         else {
-                            actor.coloringType = attributeValue;
+                            actor.coloringType = ObjectParser.FormatLine(attributeValue);
                             coloringType_set = true;
                         }
                     }
@@ -817,7 +817,7 @@ namespace InitiativeTracker
 
                             if(attributeNameLower == "name") {
                                 if (actorName_set) {
-                                    AddError("[Group " + group.name + "] Attribute found twice: " + attributeName);
+                                    AddError("[Group, name='" + group.name + "'] Attribute found twice: " + attributeName);
                                 }
                                 else {
                                     actorName = ObjectParser.FormatLine(attributeValue);
@@ -826,12 +826,12 @@ namespace InitiativeTracker
                             }
                             else if(attributeNameLower == "amount") {
                                 if (actorAmount_set) {
-                                    AddError("[Group " + group.name + "] Attribute found twice: " + attributeName);
+                                    AddError("[Group, name='" + group.name + "'] Attribute found twice: " + attributeName);
                                 }
                                 else {
                                     var tokens = ObjectParser.GetTokens(attributeValue);
                                     if (!tokens.HasValue || !tokens.Value.Validate()) {
-                                        AddError("[Group " + group.name + "] Unable to Interpret: " + attributeName);
+                                        AddError("[Group, name='" + group.name + "'] Unable to Interpret: " + attributeName);
                                     }
                                     else {
                                         actorAmount = tokens.Value;
@@ -840,13 +840,13 @@ namespace InitiativeTracker
                                 }
                             }
                             else {
-                                AddError("[Group " + group.name + "] Attribute not expected: " + attributeName);
+                                AddError("[Group, name='" + group.name + "'] Attribute not expected: " + attributeName);
                             }
                         }
                     }
                     // Add Actor(s)
                     if (!actorName_set) {
-                        AddError("[Group " + group.name + "] Child Attribute not found: name");
+                        AddError("[Group, name='" + group.name + "'] Child Attribute not found: name");
                         continue;
                     }
                     if (!actorAmount_set) {
@@ -984,9 +984,9 @@ namespace InitiativeTracker
             catch (Exception actorEx) {
                 errors.Add("[Actors] Encountered Issue when loading Actors: " + actorEx.ToString());
             }
-            Program.data.ValidateGroups(ref errors);
+            Program.data.ValidateGroups(errors);
             if (isStartUp) {
-                Program.data.AutoaddGroups(ref errors);
+                Program.data.AutoaddGroups(errors);
             }
 
             Program.screenWriter.Write(Output.GetSuccessfulLoadingScreen(errors, true));

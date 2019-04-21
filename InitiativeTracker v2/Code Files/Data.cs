@@ -170,7 +170,7 @@ namespace InitiativeTracker
             nextID = 0;
         }
 
-        public void ValidateGroups(ref List<string> errors) {
+        public void ValidateGroups(List<string> errors) {
             for(int groupIndex = loadedGroups.Count - 1; groupIndex >= 0; --groupIndex) {
                 bool allFound = true;
                 for(int actorIndex = 0; actorIndex < loadedGroups[groupIndex].actors.Count; ++actorIndex) {
@@ -182,7 +182,7 @@ namespace InitiativeTracker
                         }
                     }
                     if (!thisFound) {
-                        errors.Add("[Group " + loadedGroups[groupIndex].name + "] Unable to Find Actor " + loadedGroups[groupIndex].actors[actorIndex].Item1);
+                        errors.Add("[Group, name='" + loadedGroups[groupIndex].name + "'] Unable to Find Actor " + loadedGroups[groupIndex].actors[actorIndex].Item1);
                         allFound = false;
                     }
                 }
@@ -192,10 +192,10 @@ namespace InitiativeTracker
             }
         }
 
-        public void AutoaddGroups(ref List<string> errors) {
+        public void AutoaddGroups(List<string> errors) {
             for(int groupIndex = 0; groupIndex < loadedGroups.Count; ++groupIndex) {
                 if(loadedGroups[groupIndex].name.StartsWith("autoadd", StringComparison.InvariantCultureIgnoreCase)) {
-                    AddGroup_Silent(loadedGroups[groupIndex].actors);
+                    AddGroup_Silent(loadedGroups[groupIndex].actors, errors);
                 }
             }
         }
@@ -233,14 +233,15 @@ namespace InitiativeTracker
             }
         }
 
-        public void AddActor(AbstractActor actor) {
-            var instance = actor.CreateInstance(loadedColoringTypes, out string errorMessage);
-            if(errorMessage == null) {
+        public void AddActor(AbstractActor actor, List<string> errors) {
+            int errorCount = errors.Count;
+            var instance = actor.CreateInstance(loadedColoringTypes, errors);
+            if(errors.Count == errorCount) {
                 AddActor_Silent(instance);
                 changes.Push(new AddActors(instance));
             }
         }
-        public void AddGroup(List<Tuple<string, List<Token>>> group) {
+        public void AddGroup(List<Tuple<string, List<Token>>> group, List<string> errors) {
             var change = new AddActors();
             for(int groupIndex = 0; groupIndex < group.Count; ++groupIndex) {
                 // Get Actor
@@ -256,8 +257,9 @@ namespace InitiativeTracker
                     var amount = group[groupIndex].Item2.Evaluate();
                     if (amount.HasValue) {
                         for(int count = 0; count < amount.Value; ++count) {
-                            var instance = actor.CreateInstance(loadedColoringTypes, out string errorMessage);
-                            if (errorMessage == null) {
+                            int errorCount = errors.Count;
+                            var instance = actor.CreateInstance(loadedColoringTypes, errors);
+                            if (errors.Count == errorCount) {
                                 AddActor_Silent(instance);
                                 change.ids.Add(instance.id);
                             }
@@ -268,7 +270,7 @@ namespace InitiativeTracker
             changes.Push(change);
         }
 
-        public void AddGroup_Silent(List<Tuple<string, List<Token>>> group) {
+        public void AddGroup_Silent(List<Tuple<string, List<Token>>> group, List<string> errors) {
             for (int groupIndex = 0; groupIndex < group.Count; ++groupIndex) {
                 // Get Actor
                 AbstractActor actor = null;
@@ -283,8 +285,9 @@ namespace InitiativeTracker
                     var amount = group[groupIndex].Item2.Evaluate();
                     if (amount.HasValue) {
                         for (int count = 0; count < amount.Value; ++count) {
-                            var instance = actor.CreateInstance(loadedColoringTypes, out string errorMessage);
-                            if (errorMessage == null) {
+                            int errorCount = errors.Count;
+                            var instance = actor.CreateInstance(loadedColoringTypes, errors);
+                            if (errors.Count == errorCount) {
                                 AddActor_Silent(instance);
                             }
                         }

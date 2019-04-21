@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace InitiativeTracker
@@ -7,6 +8,7 @@ namespace InitiativeTracker
     {
         public int select_active = 0;
 
+        public List<string> select_errors = new List<string>();
         public void Select_Setup() {
             
         }
@@ -54,6 +56,10 @@ namespace InitiativeTracker
                 screen.AddFormattedLine(Program.specialCharacters.rightArrow.ToString(), ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
             }
             screen.AddFormattedLine(reloadString, ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder + SelectionLeftIndent, int.MaxValue, top);
+            ++top;
+
+            // Add Errors
+            screen.AddFormattedLines(Program.outputData.select_errors, ConsoleColor.White, ConsoleColor.Black, left, screen.Width, top);
         }
 
         private static Screen GetScreen_Select() {
@@ -74,6 +80,8 @@ namespace InitiativeTracker
         private const ConsoleKey Select_Next = ConsoleKey.DownArrow;
         private const ConsoleKey Select_Previous = ConsoleKey.UpArrow;
         private static void Parse_Select(ConsoleKeyInfo keyInfo) {
+            Program.outputData.select_errors.Clear();
+
             switch (keyInfo.Key) {
                     // Undo
                 case ConsoleKey.Z:
@@ -98,11 +106,11 @@ namespace InitiativeTracker
                 case Confirm:
                     if(Program.outputData.select_active < Program.data.loadedGroups.Count) {
                         // Add Group
-                        Program.data.AddGroup(Program.data.loadedGroups[Program.outputData.select_active].actors);
+                        Program.data.AddGroup(Program.data.loadedGroups[Program.outputData.select_active].actors, Program.outputData.select_errors);
                     }
                     else if(Program.outputData.select_active < Program.data.loadedGroups.Count + Program.data.loadedActors.Count) {
                         // Add Actor
-                        Program.data.AddActor(Program.data.loadedActors[Program.outputData.select_active - Program.data.loadedGroups.Count]);
+                        Program.data.AddActor(Program.data.loadedActors[Program.outputData.select_active - Program.data.loadedGroups.Count], Program.outputData.select_errors);
                     }
                     else {
                         Program.outputData.select_active = 0;

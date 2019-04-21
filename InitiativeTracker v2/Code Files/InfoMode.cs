@@ -503,7 +503,8 @@ namespace InitiativeTracker
                     Program.outputData.Info_Argument_Clear();
                     return;
             }
-            // Parse Mode-Dependant
+            
+            // Parse other Keys
             switch (Program.outputData.info_opMode) {
                 case Info_OpMode.LoseHealth:
                 case Info_OpMode.GainHealth:
@@ -525,121 +526,130 @@ namespace InitiativeTracker
             switch (keyInfo.Key) {
                 case Confirm:
                     // Evaluate Tokens
-                    var tokens = ObjectParser.GetTokens(Program.outputData.Info_GetArgument());
-                    if (tokens.HasValue) {
-                        var result = tokens.Value.Evaluate();
-                        if (result.HasValue) {
-                            switch (Program.outputData.info_opMode) {
-                                case Info_OpMode.LoseHealth:
-                                    Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
-                                    return;
-                                case Info_OpMode.GainHealth:
-                                    Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
-                                    return;
-                                case Info_OpMode.GainTemp:
-                                    Program.data.GainTemporary(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
-                                    return;
-                                default:
-                                    throw new ArgumentOutOfRangeException(nameof(Program.outputData.info_opMode));
+                    if(Program.data.idList.Count > 0) {
+                        var tokens = ObjectParser.GetTokens(Program.outputData.Info_GetArgument());
+                        if (tokens.HasValue) {
+                            var result = tokens.Value.Evaluate();
+                            if (result.HasValue) {
+                                switch (Program.outputData.info_opMode) {
+                                    case Info_OpMode.LoseHealth:
+                                        Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
+                                        break;
+                                    case Info_OpMode.GainHealth:
+                                        Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
+                                        break;
+                                    case Info_OpMode.GainTemp:
+                                        Program.data.GainTemporary(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
+                                        break;
+                                    default:
+                                        throw new ArgumentOutOfRangeException(nameof(Program.outputData.info_opMode));
+                                }
                             }
                         }
                     }
                     break;
                 case GainHealth:
                     // Gain Health
-                    if ((keyInfo.Modifiers & ConsoleModifiers.Alt) != 0) {
-                        Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], AltAmount);
-                    }
-                    else if ((keyInfo.Modifiers & ConsoleModifiers.Control) != 0) {
-                        Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], CtrlAmount);
-                    }
-                    else if ((keyInfo.Modifiers & ConsoleModifiers.Shift) != 0) {
-                        Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], ShiftAmount);
-                    }
-                    else {
-                        Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], DefAmount);
+                    if(Program.data.idList.Count > 0) {
+                        if ((keyInfo.Modifiers & ConsoleModifiers.Alt) != 0) {
+                            Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], AltAmount);
+                        }
+                        else if ((keyInfo.Modifiers & ConsoleModifiers.Control) != 0) {
+                            Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], CtrlAmount);
+                        }
+                        else if ((keyInfo.Modifiers & ConsoleModifiers.Shift) != 0) {
+                            Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], ShiftAmount);
+                        }
+                        else {
+                            Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], DefAmount);
+                        }
                     }
                     break;
                 case LoseHealth:
                     // Lose Health
-                    if ((keyInfo.Modifiers & ConsoleModifiers.Alt) != 0) {
-                        Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], AltAmount);
-                    }
-                    else if ((keyInfo.Modifiers & ConsoleModifiers.Control) != 0) {
-                        Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], CtrlAmount);
-                    }
-                    else if ((keyInfo.Modifiers & ConsoleModifiers.Shift) != 0) {
-                        Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], ShiftAmount);
-                    }
-                    else {
-                        Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], DefAmount);
+                    if(Program.data.idList.Count > 0) {
+                        if ((keyInfo.Modifiers & ConsoleModifiers.Alt) != 0) {
+                            Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], AltAmount);
+                        }
+                        else if ((keyInfo.Modifiers & ConsoleModifiers.Control) != 0) {
+                            Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], CtrlAmount);
+                        }
+                        else if ((keyInfo.Modifiers & ConsoleModifiers.Shift) != 0) {
+                            Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], ShiftAmount);
+                        }
+                        else {
+                            Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], DefAmount);
+                        }
                     }
                     break;
+                default:
+                    // Add Character to Argument
+                    ObjectParser.FormatExpressionChar(keyInfo.KeyChar, Program.outputData.Info_Argument_Add);
+                    break;
             }
-            // Add Character to Argument
-            ObjectParser.FormatExpressionChar(keyInfo.KeyChar, Program.outputData.Info_Argument_Add);
         }
         /// <summary>
         /// For Condition, Note, Remove
         /// </summary>
         private static void Parse_Info_Text(ConsoleKeyInfo keyInfo) {
-            // Look for Confirm Key
-            if(Program.data.idList.Count == 0) {
-                return;
-            }
-
             switch (keyInfo.Key) {
                 case Confirm:
-                    var actor = Program.data.GetActor(Program.data.idList[Program.outputData.Info_GetSelected()]);
-                    switch (Program.outputData.info_opMode) {
-                        case Info_OpMode.Condition:
-                            if(actor != null) {
-                                // Add Condition
-                                var condition = Program.outputData.Info_GetArgument().GetCondition();
-                                if (condition.HasValue) {
-                                    if (actor.AddCondition(condition.Value)) {
-                                        Program.outputData.Info_Argument_Clear();
-                                    }
-                                }
-                            }
-                            return;
-                        case Info_OpMode.Note:
-                            if(actor != null) {
-                                // Add Note
-                                actor.AddNote(Program.outputData.Info_GetArgument());
-                            }
-                            return;
-                        case Info_OpMode.Remove:
-                            if(actor != null) {
-                                if(Program.outputData.Info_GetArgument().Length == 0) {
-                                    // Remove Actor
-                                    Program.data.RemoveActor(actor.id);
-                                    Program.outputData.Info_UpdateArgumentInfo();
-                                }
-                                else {
+                    if(Program.data.idList.Count > 0) {
+                        var actor = Program.data.GetActor(Program.data.idList[Program.outputData.Info_GetSelected()]);
+                        switch (Program.outputData.info_opMode) {
+                            case Info_OpMode.Condition:
+                                if (actor != null) {
+                                    // Add Condition
                                     var condition = Program.outputData.Info_GetArgument().GetCondition();
                                     if (condition.HasValue) {
-                                        // Remove Condition
-                                        actor.RemoveCondition(condition.Value);
-                                        Program.outputData.Info_UpdateArgumentInfo();
-                                    }
-                                    else {
-                                        // Remove Note
-                                        var index = ObjectParser.GetInt10(Program.outputData.Info_GetArgument());
-                                        if (index.HasValue) {
-                                            actor.RemoveNote(index.Value);
-                                            Program.outputData.Info_UpdateArgumentInfo();
+                                        if (actor.AddCondition(condition.Value)) {
+                                            Program.outputData.Info_Argument_Clear();
                                         }
                                     }
                                 }
-                            }
-                            return;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(Program.outputData.info_opMode));
+                                break;
+                            case Info_OpMode.Note:
+                                if (actor != null) {
+                                    // Add Note
+                                    actor.AddNote(Program.outputData.Info_GetArgument());
+                                }
+                                break;
+                            case Info_OpMode.Remove:
+                                if (actor != null) {
+                                    if (Program.outputData.Info_GetArgument().Length == 0) {
+                                        // Remove Actor
+                                        Program.data.RemoveActor(actor.id);
+                                        Program.outputData.Info_UpdateArgumentInfo();
+                                    }
+                                    else {
+                                        var condition = Program.outputData.Info_GetArgument().GetCondition();
+                                        if (condition.HasValue) {
+                                            // Remove Condition
+                                            actor.RemoveCondition(condition.Value);
+                                            Program.outputData.Info_UpdateArgumentInfo();
+                                        }
+                                        else {
+                                            // Remove Note
+                                            var index = ObjectParser.GetInt10(Program.outputData.Info_GetArgument());
+                                            if (index.HasValue) {
+                                                actor.RemoveNote(index.Value);
+                                                Program.outputData.Info_UpdateArgumentInfo();
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(Program.outputData.info_opMode));
+                        }
                     }
+                    break;
+                    
+                default:
+                    // Parse Char as Input
+                    ObjectParser.FormatChar(keyInfo.KeyChar, Program.outputData.Info_Argument_Add);
+                    break;
             }
-            // Parse Char as Input
-            ObjectParser.FormatChar(keyInfo.KeyChar, Program.outputData.Info_Argument_Add);
         }
     }
 }
