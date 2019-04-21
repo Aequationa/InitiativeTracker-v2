@@ -703,7 +703,7 @@ namespace InitiativeTracker
         /// </summary>
         public bool create_check_all = false;
 
-        public string create_createError = null;
+        public List<string> create_errors = new List<string>();
 
         public void Create_UpdateChecks() {
             // Update Coloring Check
@@ -774,6 +774,8 @@ namespace InitiativeTracker
 
             create_savePath.Set(Path.Combine(FileParser.GetFolderDirectory(), "Actors"));
 
+            create_errors.Clear();
+
             Create_UpdateChecks();
         }
         
@@ -831,7 +833,10 @@ namespace InitiativeTracker
             }
         }
         
-        public Actor Create_CreateInstance(out string errorMessage) {
+        /// <summary>
+        /// Creates an Instance from the given Fields, recording Errors to create_errors
+        /// </summary>
+        public Actor Create_CreateInstance() {
             Actor actor = new Actor();
             // Get Name, Speed
             actor.name = create_name.GetValue();
@@ -839,40 +844,46 @@ namespace InitiativeTracker
             // Get AC
             if (!create_ac.IsEmpty()) {
                 if (!create_ac.HasValue()) {
-                    errorMessage = "[Create] Unable to Compute: AC";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: AC");
                 }
-                var eval_armorClass = create_ac.GetTokens().Evaluate();
-                if (!eval_armorClass.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: AC";
-                    return actor;
+                else {
+                    var eval_armorClass = create_ac.GetTokens().Evaluate();
+                    if (!eval_armorClass.HasValue) {
+                        create_errors.Add("[Create] Unable to Compute: AC");
+                    }
+                    else {
+                        actor.armorClass = eval_armorClass.Value;
+                    }
                 }
-                actor.armorClass = eval_armorClass.Value;
             }
             // Get HP Values
             if (!create_hp.HasValue()) {
-                errorMessage = "[Create] Unable to Compute: HP";
-                return actor;
+                create_errors.Add("[Create] Unable to Compute: HP");
             }
-            var eval_HP = create_hp.GetTokens().Evaluate();
-            if (!eval_HP.HasValue) {
-                errorMessage = "[Create] Unable to Compute: HP";
-                return actor;
+            else {
+                var eval_HP = create_hp.GetTokens().Evaluate();
+                if (!eval_HP.HasValue) {
+                    create_errors.Add("[Create] Unable to Compute: HP");
+                }
+                else {
+                    actor.currentHP = eval_HP.Value;
+                    actor.maximumHP = eval_HP.Value;
+                }
             }
-            actor.currentHP = eval_HP.Value;
-            actor.maximumHP = eval_HP.Value;
 
             if (!create_temp.IsEmpty()) {
                 if (!create_temp.HasValue()) {
-                    errorMessage = "[Create] Unable to Compute: Temp";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Temp");
                 }
-                var eval_temporary = create_temp.GetTokens().Evaluate();
-                if (!eval_temporary.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Temp";
-                    return actor;
+                else {
+                    var eval_temporary = create_temp.GetTokens().Evaluate();
+                    if (!eval_temporary.HasValue) {
+                        create_errors.Add("[Create] Unable to Compute: Temp");
+                    }
+                    else {
+                        actor.temporaryHP = eval_temporary.Value;
+                    }
                 }
-                actor.temporaryHP = eval_temporary.Value;
             }
             else {
                 actor.temporaryHP = 0;
@@ -882,41 +893,42 @@ namespace InitiativeTracker
             bool hasColoring = create_base_text.HasValue() && create_base_bg.HasValue() && create_active_text.HasValue() && create_active_bg.HasValue();
             if (hasColoring) {
                 if (!create_coloring.IsEmpty()) {
-                    errorMessage = "[Create] Ambiguity: Coloring is defined twice";
-                    return actor;
+                    create_errors.Add("[Create] Ambiguity: Coloring is defined twice");
                 }
-                actor.base_text = create_base_text.GetValue();
-                actor.base_bg = create_base_bg.GetValue();
-                actor.active_text = create_active_text.GetValue();
-                actor.active_bg = create_active_bg.GetValue();
+                else {
+                    actor.base_text = create_base_text.GetValue();
+                    actor.base_bg = create_base_bg.GetValue();
+                    actor.active_text = create_active_text.GetValue();
+                    actor.active_bg = create_active_bg.GetValue();
+                }
             }
             else {
                 if (!noColoring) {
-                    errorMessage = "[Create] Unable to Compute some Colors";
-                    return actor;
-                }
-                string targetColoringType;
-                if (create_coloring.IsEmpty()) {
-                    targetColoringType = Program.settings.defaultColoringType;
+                    create_errors.Add("[Create] Unable to Compute some Colors");
                 }
                 else {
-                    targetColoringType = create_coloring.GetValue();
-                }
-
-                bool found = false;
-                for (int index = 0; index < Program.data.loadedColorings.Count; ++index) {
-                    if (Program.data.loadedColorings[index].name == targetColoringType) {
-                        actor.base_text = Program.data.loadedColorings[index].base_text;
-                        actor.base_bg = Program.data.loadedColorings[index].base_bg;
-                        actor.active_text = Program.data.loadedColorings[index].active_text;
-                        actor.active_bg = Program.data.loadedColorings[index].active_bg;
-                        found = true;
-                        break;
+                    string targetColoringType;
+                    if (create_coloring.IsEmpty()) {
+                        targetColoringType = Program.settings.defaultColoringType;
                     }
-                }
-                if (!found) {
-                    errorMessage = "[Create] Coloring not found: " + targetColoringType;
-                    return actor;
+                    else {
+                        targetColoringType = create_coloring.GetValue();
+                    }
+
+                    bool found = false;
+                    for (int index = 0; index < Program.data.loadedColoringTypes.Count; ++index) {
+                        if (Program.data.loadedColoringTypes[index].name == targetColoringType) {
+                            actor.base_text = Program.data.loadedColoringTypes[index].base_text;
+                            actor.base_bg = Program.data.loadedColoringTypes[index].base_bg;
+                            actor.active_text = Program.data.loadedColoringTypes[index].active_text;
+                            actor.active_bg = Program.data.loadedColoringTypes[index].active_bg;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        create_errors.Add("[Create] Coloring not found: " + targetColoringType);
+                    }
                 }
             }
             // Get Remove
@@ -927,8 +939,7 @@ namespace InitiativeTracker
                 actor.remove = create_remove.GetValue();
             }
             else {
-                errorMessage = "[Create] Unable to Compute: Remove";
-                return actor;
+                create_errors.Add("[Create] Unable to Compute: Remove");
             }
             // Get Scores
             bool noScores = create_score_str.IsEmpty() && create_score_dex.IsEmpty() && create_score_con.IsEmpty()
@@ -936,71 +947,84 @@ namespace InitiativeTracker
             bool allScores = create_score_str.HasValue() && create_score_dex.HasValue() && create_score_con.HasValue()
                 && create_score_int.HasValue() && create_score_wis.HasValue() && create_score_cha.HasValue();
             if(!noScores && !allScores) {
-                errorMessage = "[Create] Unable to Compute some Scores";
+                create_errors.Add("[Create] Unable to Compute some Scores");
                 return actor;
             }
-            if (allScores) {
+            else if (allScores) {
                 Scores scores = new Scores();
                 var strength = create_score_str.GetTokens().Evaluate();
                 if (!strength.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Str";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Str");
                 }
-                scores.strength = strength.Value;
-                var dexterity = create_score_dex.GetTokens().Evaluate();
-                if (!dexterity.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Dex";
-                    return actor;
-                }
-                scores.dexterity = dexterity.Value;
-                var constitution = create_score_con.GetTokens().Evaluate();
-                if (!constitution.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Con";
-                    return actor;
-                }
-                scores.constitution = constitution.Value;
-                var intelligence = create_score_int.GetTokens().Evaluate();
-                if (!intelligence.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Int";
-                    return actor;
-                }
-                scores.intelligence = intelligence.Value;
-                var wisdon = create_score_wis.GetTokens().Evaluate();
-                if (!wisdon.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Wis";
-                    return actor;
-                }
-                scores.wisdom = wisdon.Value;
-                var charisma = create_score_cha.GetTokens().Evaluate();
-                if (!charisma.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Cha";
-                    return actor;
-                }
-                scores.charisma = charisma.Value;
+                else {
+                    scores.strength = strength.Value;
 
-                scores.CalculateModifiers();
-                actor.scores = scores;
+                    var dexterity = create_score_dex.GetTokens().Evaluate();
+                    if (!dexterity.HasValue) {
+                        create_errors.Add("[Create] Unable to Compute: Dex");
+                    }
+                    else {
+                        scores.dexterity = dexterity.Value;
+
+                        var constitution = create_score_con.GetTokens().Evaluate();
+                        if (!constitution.HasValue) {
+                            create_errors.Add("[Create] Unable to Compute: Con");
+                        }
+                        else {
+                            scores.constitution = constitution.Value;
+
+                            var intelligence = create_score_int.GetTokens().Evaluate();
+                            if (!intelligence.HasValue) {
+                                create_errors.Add("[Create] Unable to Compute: Int");
+                            }
+                            else {
+                                scores.intelligence = intelligence.Value;
+
+                                var wisdon = create_score_wis.GetTokens().Evaluate();
+                                if (!wisdon.HasValue) {
+                                    create_errors.Add("[Create] Unable to Compute: Wis");
+                                }
+                                else {
+                                    scores.wisdom = wisdon.Value;
+
+                                    var charisma = create_score_cha.GetTokens().Evaluate();
+                                    if (!charisma.HasValue) {
+                                        create_errors.Add("[Create] Unable to Compute: Cha");
+                                    }
+                                    else {
+                                        scores.charisma = charisma.Value;
+
+                                        scores.CalculateModifiers();
+                                        actor.scores = scores;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             // Get Intiative
             if (!create_ini.IsEmpty()) {
                 if (!create_ini.HasValue()) {
-                    errorMessage = "[Create] Unable to Compute: Ini";
+                    create_errors.Add("[Create] Unable to Compute: Ini");
                     return actor;
                 }
-                var eval_initiative = create_ini.GetTokens().Evaluate();
-                if (!eval_initiative.HasValue) {
-                    errorMessage = "[Create] Unable to Compute: Ini";
-                    return actor;
+                else {
+                    var eval_initiative = create_ini.GetTokens().Evaluate();
+                    if (!eval_initiative.HasValue) {
+                        create_errors.Add("[Create] Unable to Compute: Ini");
+                    }
+                    else {
+                        actor.initiative = eval_initiative.Value;
+                    }
                 }
-                actor.initiative = eval_initiative.Value;
             }
             else {
                 if (actor.scores.HasValue) {
                     actor.initiative = ObjectParser.Roll(1, 20) + actor.scores.Value.dexterityModifier;
                 }
                 else {
-                    errorMessage = "[Create] Unable to Determine Value: Ini";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Determine Value: Ini");
                 }
             }
             // Get Attacks, Description, Conditions 
@@ -1013,11 +1037,13 @@ namespace InitiativeTracker
                 ++actor.nextNoteIndex;
             }
 
-            errorMessage = null;
             return actor;
         }
-        
-        public XElement Create_AsElement(out string errorMessage) {
+
+        /// <summary>
+        /// Creates an Instance from the given Fields, recording Errors to create_errors
+        /// </summary>
+        public XElement Create_CreateAsElement() {
             // Get Name, Speed
             XElement actor = new XElement("actor");
             actor.Add(new XAttribute("name", create_name.GetValue()));
@@ -1025,42 +1051,45 @@ namespace InitiativeTracker
             // Get AC
             if (!create_ac.IsEmpty()) {
                 if (!create_ac.HasValue() || !create_ac.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: AC";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: AC");
                 }
-                actor.Add(new XAttribute("ac", create_ac.GetTokens().GetString()));
+                else {
+                    actor.Add(new XAttribute("ac", create_ac.GetTokens().GetString()));
+                }
             }
             // Get HP Values
             if (!create_hp.HasValue() || !create_hp.GetTokens().Validate()) {
-                errorMessage = "[Create] Unable to Compute: HP";
-                return actor;
+                create_errors.Add("[Create] Unable to Compute: HP");
             }
-            actor.Add(new XAttribute("hp", create_hp.GetTokens().GetString()));
+            else {
+                actor.Add(new XAttribute("hp", create_hp.GetTokens().GetString()));
+            }
 
             if (!create_temp.IsEmpty()) {
                 if (!create_temp.HasValue() || !create_temp.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Temp";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Temp");
                 }
-                actor.Add(new XAttribute("temp", create_temp.GetTokens().GetString()));
+                else {
+                    actor.Add(new XAttribute("temp", create_temp.GetTokens().GetString()));
+                }
             }
             // Get Intiative
             if (!create_ini.IsEmpty()) {
                 if (!create_ini.HasValue() && !create_ini.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Ini";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Ini");
                 }
-                actor.Add(new XAttribute("ini", create_ini.GetTokens().GetString()));
+                else {
+                    actor.Add(new XAttribute("ini", create_ini.GetTokens().GetString()));
+                }
             }
 
             // Get Color Values
             bool noColoring = create_base_text.IsEmpty() && create_base_bg.IsEmpty() && create_active_text.IsEmpty() && create_active_bg.IsEmpty();
             bool hasColoring = create_base_text.HasValue() && create_base_bg.HasValue() && create_active_text.HasValue() && create_active_bg.HasValue();
             if(!noColoring && !hasColoring) {
-                errorMessage = "[Create] Unable to Compute some Colors";
-                return actor;
+                create_errors.Add("[Create] Unable to Compute some Colors");
             }
-            if (hasColoring) {
+            else if (hasColoring) {
                 XElement coloring = new XElement("coloring");
                 coloring.Add(new XAttribute("base_text", create_base_text.GetValue().GetName()));
                 coloring.Add(new XAttribute("base_bg", create_base_bg.GetValue().GetName()));
@@ -1071,14 +1100,14 @@ namespace InitiativeTracker
             if (!create_coloring.IsEmpty()) {
                 actor.Add(new XAttribute("coloring", create_coloring.GetValue()));
             }
+            
             // Get Remove
             if (!create_remove.IsEmpty()) {
-                if (create_remove.HasValue()) {
-                    actor.Add(new XAttribute("remove", create_remove.GetValue().ToString()));
+                if (!create_remove.HasValue()) {
+                    create_errors.Add("[Create] Unable to Compute: Remove");
                 }
                 else {
-                    errorMessage = "[Create] Unable to Compute: Remove";
-                    return actor;
+                    actor.Add(new XAttribute("remove", create_remove.GetValue().ToString()));
                 }
             }
             // Get Scores
@@ -1087,42 +1116,46 @@ namespace InitiativeTracker
             bool allScores = create_score_str.HasValue() && create_score_dex.HasValue() && create_score_con.HasValue()
                 && create_score_int.HasValue() && create_score_wis.HasValue() && create_score_cha.HasValue();
             if (!noScores && !allScores) {
-                errorMessage = "[Create] Unable to Compute some Scores";
-                return actor;
+                create_errors.Add("[Create] Unable to Compute some Scores");
             }
-            if (allScores) {
+            else if (allScores) {
                 XElement scores = new XElement("scores");
                 if (!create_score_str.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Str";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Str");
                 }
-                scores.Add(new XAttribute("str", create_score_str.GetTokens().GetString()));
+                else {
+                    scores.Add(new XAttribute("str", create_score_str.GetTokens().GetString()));
+                }
                 if (!create_score_dex.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Dex";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Dex");
                 }
-                scores.Add(new XAttribute("dex", create_score_dex.GetTokens().GetString()));
+                else {
+                    scores.Add(new XAttribute("dex", create_score_dex.GetTokens().GetString()));
+                }
                 if (!create_score_con.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Con";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Con");
                 }
-                scores.Add(new XAttribute("con", create_score_con.GetTokens().GetString()));
+                else {
+                    scores.Add(new XAttribute("con", create_score_con.GetTokens().GetString()));
+                }
                 if (!create_score_int.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Int";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Int");
                 }
-                scores.Add(new XAttribute("int", create_score_int.GetTokens().GetString()));
+                else {
+                    scores.Add(new XAttribute("int", create_score_int.GetTokens().GetString()));
+                }
                 if (!create_score_wis.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Wis";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Wis");
                 }
-                scores.Add(new XAttribute("wis", create_score_wis.GetTokens().GetString()));
+                else {
+                    scores.Add(new XAttribute("wis", create_score_wis.GetTokens().GetString()));
+                }
                 if (!create_score_cha.GetTokens().Validate()) {
-                    errorMessage = "[Create] Unable to Compute: Cha";
-                    return actor;
+                    create_errors.Add("[Create] Unable to Compute: Cha");
                 }
-                scores.Add(new XAttribute("cha", create_score_cha.GetTokens().GetString()));
-                
+                else {
+                    scores.Add(new XAttribute("cha", create_score_cha.GetTokens().GetString()));
+                }
                 actor.Add(scores);
             }
             // Get Attacks 
@@ -1153,7 +1186,6 @@ namespace InitiativeTracker
             // Get Descriptions
             actor.Add(new XElement("description", string.Join('\n', create_descriptionLines)));
 
-            errorMessage = null;
             return actor;
         } 
     }
@@ -1164,7 +1196,7 @@ namespace InitiativeTracker
             int x = left;
             // Add Active 
             if (isActive) {
-                screen.AddFormattedLine("► ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                screen.AddFormattedLine(Program.specialCharacters.rightArrow + " ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
                 x += 2;
             }
             else {
@@ -1182,7 +1214,7 @@ namespace InitiativeTracker
             int x = left;
             // Add Active 
             if (isActive) {
-                screen.AddFormattedLine("► ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                screen.AddFormattedLine(Program.specialCharacters.rightArrow + " ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
                 x += 2;
             }
             else {
@@ -1204,7 +1236,7 @@ namespace InitiativeTracker
             int x = left;
             // Add Active 
             if (isActive) {
-                screen.AddFormattedLine("► ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
+                screen.AddFormattedLine(Program.specialCharacters.rightArrow + " ", ConsoleColor.White, ConsoleColor.Black, x, int.MaxValue, top);
                 x += 2;
             }
             else {
@@ -1408,9 +1440,7 @@ namespace InitiativeTracker
             screen.AddField("[Save Instance] Path=", Program.outputData.create_savePath, Program.outputData.create_activeNode == CreateNode.Save,
                 CreateLeftBorder, top, WarnType.AllowEmpty);
             ++top;
-            if (Program.outputData.create_createError != null) {
-                screen.AddFormattedLine(Program.outputData.create_createError, ConsoleColor.Red, ConsoleColor.Black, 2, int.MaxValue, top);
-            }
+            screen.AddFormattedLines(Program.outputData.create_errors, ConsoleColor.Red, ConsoleColor.Black, 0, screen.Width, top);
 
             return screen;
         }
@@ -1425,6 +1455,9 @@ namespace InitiativeTracker
         public const ConsoleKey RevertAdd = ConsoleKey.Escape;
         
         private static void Parse_Create(ConsoleKeyInfo keyInfo) {
+            // Clear Errors
+            Program.outputData.create_errors.Clear();
+
             // Check Control Combinations
             if((keyInfo.Modifiers & ConsoleModifiers.Control) != 0) {
                 switch (keyInfo.Key) {
@@ -1829,8 +1862,8 @@ namespace InitiativeTracker
                 case CreateNode.Create:
                     switch (keyInfo.Key) {
                         case Confirm:
-                            var actor = Program.outputData.Create_CreateInstance(out Program.outputData.create_createError);
-                            if(Program.outputData.create_createError == null) {
+                            var actor = Program.outputData.Create_CreateInstance();
+                            if(Program.outputData.create_errors.Count == 0) {
                                 Program.data.AddActor(actor);
                             }
                             break;
@@ -1839,9 +1872,9 @@ namespace InitiativeTracker
                 case CreateNode.Save:
                     switch (keyInfo.Key) {
                         case Confirm:
-                            var element = Program.outputData.Create_AsElement(out Program.outputData.create_createError);
-                            if(Program.outputData.create_createError == null) {
-                                FileParser.WriteToXML(element, Program.outputData.create_savePath.GetValue(), out Program.outputData.create_createError);
+                            var element = Program.outputData.Create_CreateAsElement();
+                            if(Program.outputData.create_errors.Count == 0) {
+                                FileParser.WriteToXML(element, Program.outputData.create_savePath.GetValue(), Program.outputData.create_errors);
                             }
                             break;
                         case Clear:

@@ -173,7 +173,10 @@ namespace InitiativeTracker
         public ScreenWriter() {
             old = null;
         }
-
+        
+        /// <summary>
+        /// Clears Console Black, then Writes all Lines. Leaves the Cursor Invisible at (0, 0)
+        /// </summary>
         private void Write_New(Screen screen) {
             try {
                 Console.CursorVisible = false;
@@ -284,7 +287,15 @@ namespace InitiativeTracker
                     catch (Exception) { }
                 }
             }
+            try {
+                Console.SetCursorPosition(0, 0);
+            }
+            catch (Exception) { }
         }
+        /// <summary>
+        /// Writes only Difference from last Screen. Leaves the Cursor Invisible at (0, 0)
+        /// </summary>
+        /// <param name="screen"></param>
         private void Write_Overwrite(Screen screen) {
             try {
                 Console.CursorVisible = false;
@@ -378,6 +389,10 @@ namespace InitiativeTracker
                     catch (Exception) { }
                 }
             }
+            try {
+                Console.SetCursorPosition(0, 0);
+            }
+            catch (Exception) { }
         }
 
         private int OperationCount_New(Screen screen) {
@@ -486,9 +501,9 @@ namespace InitiativeTracker
             }
             return count;
         }
-        private const int delta = 10;
+        private const int clearCost = 10;
 
-        public void Write(Screen screen) {
+        public void Write(Screen screen, bool forceNew = false) {
             int width = screen.Width;
             int height = screen.Height;
             //Remove bottom right Entry if Visible
@@ -496,11 +511,31 @@ namespace InitiativeTracker
                 screen.SetC(width - 1, height - 1, ' ');
             }
 
-            if (old == null || width != old.Width || height != old.Height) {
+            if (forceNew || old == null || width != old.Width || height != old.Height) {
                 Write_New(screen);
             }
             else {
-                if(OperationCount_New(screen) >= OperationCount_Overwrite(screen) + delta) {
+                if(Console.CursorLeft != 0 || Console.CursorTop != 0) {
+                    //Cursor has been moved, mark all Entries that we assume to be corrupted
+                    try {
+                        int cursorX = Console.CursorLeft;
+                        int cursorY = Console.CursorTop;
+
+                        for (int y = 0; y < cursorY && y < height; ++y) {
+                            for (int x = 0; x < width; ++x) {
+                                old.SetC(x, y, '\u0007');
+                            }
+                        }
+                        if (Console.CursorTop < height) {
+                            for (int x = 0; x < cursorX; ++x) {
+                                old.SetC(x, cursorY, '\u0007');
+                            }
+                        }
+                    }
+                    catch (Exception) { }
+                }
+
+                if(OperationCount_New(screen) >= OperationCount_Overwrite(screen) + clearCost) {
                     Write_Overwrite(screen);
                 }
                 else {

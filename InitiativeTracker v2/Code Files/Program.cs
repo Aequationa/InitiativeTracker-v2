@@ -10,6 +10,7 @@ namespace InitiativeTracker
         public static Settings settings;
         public static Data data = new Data();
         public static OutputData outputData = new OutputData();
+        public static SpecialCharacters specialCharacters = new SpecialCharacters();
 
         public const int SleepDelta = 10;
 
@@ -47,7 +48,6 @@ namespace InitiativeTracker
             while (true) {
                 if (Console.KeyAvailable) {
                     InputParser.Parse(Console.ReadKey(true));
-                    screenWriter.Write(Output.GetScreen());
                 }
                 else {
                     Thread.Sleep(SleepDelta);

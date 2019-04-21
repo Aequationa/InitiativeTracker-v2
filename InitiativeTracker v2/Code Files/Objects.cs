@@ -625,11 +625,11 @@ namespace InitiativeTracker
     public class Group
     {
         public string name;
-        public List<AbstractActor> actors;
+        public List<Tuple<string, List<Token>>> actors;
 
         public Group() {
             name = null;
-            actors = new List<AbstractActor>();
+            actors = new List<Tuple<string, List<Token>>>();
         }
     }
 }

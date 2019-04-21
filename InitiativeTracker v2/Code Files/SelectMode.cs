@@ -24,7 +24,7 @@ namespace InitiativeTracker
             for(int pos = 0; pos < Program.data.loadedGroups.Count; ++pos) {
                 string groupString = "Group '" + Program.data.loadedGroups[pos].name + "'";
                 if(index == Program.outputData.select_active) {
-                    screen.AddFormattedLine("►", ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
+                    screen.AddFormattedLine(Program.specialCharacters.rightArrow.ToString(), ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
                 }
                 screen.AddFormattedLine(groupString, ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder + SelectionLeftIndent, int.MaxValue, top);
                 ++index;
@@ -38,7 +38,7 @@ namespace InitiativeTracker
             for(int pos = 0; pos < Program.data.loadedActors.Count; ++pos) {
                 string actorString = "Actor '" + Program.data.loadedActors[pos].name + "'";
                 if (index == Program.outputData.select_active) {
-                    screen.AddFormattedLine("►", ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
+                    screen.AddFormattedLine(Program.specialCharacters.rightArrow.ToString(), ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
                 }
                 screen.AddFormattedLine(actorString, ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder + SelectionLeftIndent, int.MaxValue, top);
                 ++index;
@@ -51,7 +51,7 @@ namespace InitiativeTracker
             // Add Reload
             string reloadString = "Reload Data";
             if (index == Program.outputData.select_active) {
-                screen.AddFormattedLine("►", ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
+                screen.AddFormattedLine(Program.specialCharacters.rightArrow.ToString(), ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder, int.MaxValue, top);
             }
             screen.AddFormattedLine(reloadString, ConsoleColor.White, ConsoleColor.Black, left + SelectionLeftBorder + SelectionLeftIndent, int.MaxValue, top);
         }
@@ -97,17 +97,17 @@ namespace InitiativeTracker
                     break;
                 case Confirm:
                     if(Program.outputData.select_active < Program.data.loadedGroups.Count) {
-                        // Load Group
-                        Program.data.AddActors(Program.data.loadedGroups[Program.outputData.select_active].actors);
+                        // Add Group
+                        Program.data.AddGroup(Program.data.loadedGroups[Program.outputData.select_active].actors);
                     }
                     else if(Program.outputData.select_active < Program.data.loadedGroups.Count + Program.data.loadedActors.Count) {
-                        // Load Actor
+                        // Add Actor
                         Program.data.AddActor(Program.data.loadedActors[Program.outputData.select_active - Program.data.loadedGroups.Count]);
                     }
                     else {
                         Program.outputData.select_active = 0;
                         // Delete Data
-                        Program.data.loadedColorings.Clear();
+                        Program.data.loadedColoringTypes.Clear();
                         Program.data.loadedGroups.Clear();
                         Program.data.loadedActors.Clear();
 

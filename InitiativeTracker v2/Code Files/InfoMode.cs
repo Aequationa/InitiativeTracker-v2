@@ -534,10 +534,10 @@ namespace InitiativeTracker
                                     Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
                                     return;
                                 case Info_OpMode.GainHealth:
-                                    Program.data.LoseHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
+                                    Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
                                     return;
                                 case Info_OpMode.GainTemp:
-                                    Program.data.GainHealth(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
+                                    Program.data.GainTemporary(Program.data.idList[Program.outputData.Info_GetSelected()], result.Value);
                                     return;
                                 default:
                                     throw new ArgumentOutOfRangeException(nameof(Program.outputData.info_opMode));

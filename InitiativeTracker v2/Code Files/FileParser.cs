@@ -8,112 +8,116 @@ namespace InitiativeTracker
     public static class FileParser
     {
         // === Parse File to Object ===
-        private static Settings ReadSettings(string[] text, out string errorMessage) {
+        private static Settings ReadSettings(string[] text, Action<string> AddError, Func<int> GetErrorCount) {
             Settings settings = new Settings();
 
-            if(text.Length < 7) {
-                errorMessage = "[Settings] Not enough Arguments";
+            if(text.Length != 7) {
+                AddError("[Settings] Bad Number of Lines");
                 return settings;
             }
 
             // ColoringType
             string defaultColoringTypeString = "defaultColoringType=";
             if (!text[0].StartsWith(defaultColoringTypeString)) {
-                errorMessage = "[Settings] Argument not found: defaultColoringType";
-                return settings;
+                AddError("[Settings] Argument not found: defaultColoringType");
             }
             settings.defaultColoringType = text[0].Substring(defaultColoringTypeString.Length);
 
             // Remove
             string defaultRemoveString = "defaultRemove=";
             if (!text[1].StartsWith(defaultRemoveString)) {
-                errorMessage = "[Settings] Argument not found: defaultRemove";
-                return settings;
+                AddError("[Settings] Argument not found: defaultRemove");
             }
-            var defaultRemove = ObjectParser.GetBoolean(text[1].Substring(defaultRemoveString.Length));
-            if (!defaultRemove.HasValue) {
-                errorMessage = "[Settings] Unable to Interpret: defaultRemove";
-                return settings;
+            else {
+                var defaultRemove = ObjectParser.GetBoolean(text[1].Substring(defaultRemoveString.Length));
+                if (!defaultRemove.HasValue) {
+                    AddError("[Settings] Unable to Interpret: defaultRemove");
+                }
+                else {
+                    settings.defaultRemove = defaultRemove.Value;
+                }
             }
-            settings.defaultRemove = defaultRemove.Value;
 
             // Type
             string defaultTypeString = "defaultType=";
             if(!text[2].StartsWith(defaultTypeString)) {
-                errorMessage = "[Settings] Argument not found: defaultType";
-                return settings;
+                AddError("[Settings] Argument not found: defaultType");
             }
-            var defaultType = ObjectParser.GetInt10(text[2], defaultTypeString.Length, text[2].Length);
-            if (!defaultType.HasValue) {
-                errorMessage = "[Settings] Unable to Interpret: defaultType";
-                return settings;
+            else {
+                var defaultType = ObjectParser.GetInt10(text[2], defaultTypeString.Length, text[2].Length);
+                if (!defaultType.HasValue) {
+                    AddError("[Settings] Unable to Interpret: defaultType");
+                }
+                else {
+                    settings.defaultType = defaultType.Value;
+                }
             }
-            settings.defaultType = defaultType.Value;
 
             // Tab Width
             string tabWidthString = "tabWidth=";
             if(!text[3].StartsWith(tabWidthString)) {
-                errorMessage = "[Settings] Argument not found: tabWidth";
-                return settings;
+                AddError("[Settings] Argument not found: tabWidth");
             }
-            var tabWidth = ObjectParser.GetInt10(text[3], tabWidthString.Length, text[3].Length);
-            if (!tabWidth.HasValue) {
-                errorMessage = "[Settings] Unable to Interpret: tabWidth";
-                return settings;
+            else {
+                var tabWidth = ObjectParser.GetInt10(text[3], tabWidthString.Length, text[3].Length);
+                if (!tabWidth.HasValue) {
+                    AddError("[Settings] Unable to Interpret: tabWidth");
+                }
+                else {
+                    settings.tabWidth = tabWidth.Value;
+                }
             }
-            settings.tabWidth = tabWidth.Value;
+            
 
             // Resive Console
             var resizeConsoleString = "resizeConsole=";
             if (!text[4].StartsWith(resizeConsoleString)) {
-                errorMessage = "[Settings] Argument not found: resizeConsole";
-                return settings;
+                AddError("[Settings] Argument not found: resizeConsole");
             }
-            var resizeConsole = ObjectParser.GetBoolean(text[4].Substring(resizeConsoleString.Length));
-            if (!resizeConsole.HasValue) {
-                errorMessage = "[Settings] Unable to Interpret: resizeConsole";
-                return settings;
+            else {
+                var resizeConsole = ObjectParser.GetBoolean(text[4].Substring(resizeConsoleString.Length));
+                if (!resizeConsole.HasValue) {
+                    AddError("[Settings] Unable to Interpret: resizeConsole");
+                }
+                else {
+                    settings.resizeConsole = resizeConsole.Value;
+                }
             }
-            settings.resizeConsole = resizeConsole.Value;
 
             // Resive Buffer
             var resizeBufferString = "resizeBuffer=";
             if (!text[5].StartsWith(resizeBufferString)) {
-                errorMessage = "[Settings] Argument not found: resizeBuffer";
-                return settings;
+                AddError("[Settings] Argument not found: resizeBuffer");
             }
-            var resizeBuffer = ObjectParser.GetBoolean(text[5].Substring(resizeBufferString.Length));
-            if (!resizeBuffer.HasValue) {
-                errorMessage = "[Settings] Unable to Interpret: resizeBuffer";
-                return settings;
+            else {
+                var resizeBuffer = ObjectParser.GetBoolean(text[5].Substring(resizeBufferString.Length));
+                if (!resizeBuffer.HasValue) {
+                    AddError("[Settings] Unable to Interpret: resizeBuffer");
+                }
+                else {
+                    settings.resizeBuffer = resizeBuffer.Value;
+                }
             }
-            settings.resizeBuffer = resizeBuffer.Value;
 
             // Use Special
             var useSpecialString = "useSpecial=";
             if (!text[6].StartsWith(useSpecialString)) {
-                errorMessage = "[Settings] Argument not found: useSpecial";
-                return settings;
+                AddError("[Settings] Argument not found: useSpecial");
             }
-            var useSpecial = ObjectParser.GetBoolean(text[6].Substring(useSpecialString.Length));
-            if (!useSpecial.HasValue) {
-                errorMessage = "[Settings] Unable to Interpret: useSpecial";
-                return settings;
+            else {
+                var useSpecial = ObjectParser.GetBoolean(text[6].Substring(useSpecialString.Length));
+                if (!useSpecial.HasValue) {
+                    AddError("[Settings] Unable to Interpret: useSpecial");
+                }
+                else {
+                    settings.useSpecial = useSpecial.Value;
+                }
             }
-            settings.useSpecial = useSpecial.Value;
-            /* = true
-resizeBuffer = true
-useSpecial = true*/
 
-
-
-
-            // Return Settings
-            errorMessage = null;
             return settings;
         }
 
-        private static ColoringType ReadColoringType(XElement element, out string errorMessage) {
+        private static ColoringType ReadColoringType(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             ColoringType coloringType = new ColoringType();
 
             bool name_set = false;
@@ -130,97 +134,101 @@ useSpecial = true*/
 
                     if (attributeNameLower == "name") {
                         if (name_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                             return coloringType;
                         }
-                        coloringType.name = attributeValue;
-                        name_set = true;
+                        else {
+                            coloringType.name = attributeValue;
+                            name_set = true;
+                        }
                     }
                     else if (attributeNameLower == "base_text") {
                         if (base_text_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloringType;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloringType;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloringType.base_text = consoleColor.Value;
+                                base_text_set = true;
+                            }
                         }
-                        coloringType.base_text = consoleColor.Value;
-                        base_text_set = true;
                     }
                     else if (attributeNameLower == "base_bg") {
                         if (base_bg_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloringType;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloringType;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloringType.base_bg = consoleColor.Value;
+                                base_bg_set = true;
+                            }
                         }
-                        coloringType.base_bg = consoleColor.Value;
-                        base_bg_set = true;
                     }
                     else if (attributeNameLower == "active_text") {
                         if (active_text_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloringType;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloringType;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloringType.active_text = consoleColor.Value;
+                                active_text_set = true;
+                            }
                         }
-                        coloringType.active_text = consoleColor.Value;
-                        active_text_set = true;
                     }
                     else if (attributeNameLower == "active_bg") {
                         if (active_bg_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloringType;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloringType;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloringType.active_bg = consoleColor.Value;
+                                active_bg_set = true;
+                            }
                         }
-                        coloringType.active_bg = consoleColor.Value;
-                        active_bg_set = true;
                     }
                     else {
-                        errorMessage = "[Coloring] Attribute Name not expected: " + attributeName ;
-                        return coloringType;
+                        AddError("[Coloring] Attribute Name not expected: " + attributeName);
                     }
                 }
             }
             if (!name_set) {
-                errorMessage = "[Coloring] Attribute not found: name";
-                return coloringType;
+                AddError("[Coloring] Attribute not found: name");
             }
-            else if (!base_text_set) {
-                errorMessage = "[Coloring] Attribute not found: base_text";
-                return coloringType;
+            if (!base_text_set) {
+                AddError("[Coloring] Attribute not found: base_text");
             }
-            else if (!base_bg_set) {
-                errorMessage = "[Coloring] Attribute not found: base_bg";
-                return coloringType;
+            if (!base_bg_set) {
+                AddError("[Coloring] Attribute not found: base_bg");
             }
-            else if (!active_text_set) {
-                errorMessage = "[Coloring] Attribute not found: active_text";
-                return coloringType;
+            if (!active_text_set) {
+                AddError("[Coloring] Attribute not found: active_text");
             }
-            else if (!active_bg_set) {
-                errorMessage = "[Coloring] Attribute not found: active_bg";
-                return coloringType;
+            if (!active_bg_set) {
+                AddError("[Coloring] Attribute not found: active_bg");
             }
-            errorMessage = null;
+
             return coloringType;
         }
 
-        private static Coloring ReadColoring(XElement element, out string errorMessage) {
+        private static Coloring ReadColoring(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             Coloring coloring = new Coloring();
-            
+
             bool base_text_set = false;
             bool base_bg_set = false;
             bool active_text_set = false;
@@ -234,83 +242,86 @@ useSpecial = true*/
 
                     if (attributeNameLower == "base_text") {
                         if (base_text_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloring;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloring;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloring.base_text = consoleColor.Value;
+                                base_text_set = true;
+                            }
                         }
-                        coloring.base_text = consoleColor.Value;
-                        base_text_set = true;
                     }
                     else if (attributeNameLower == "base_bg") {
                         if (base_bg_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloring;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloring;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloring.base_bg = consoleColor.Value;
+                                base_bg_set = true;
+                            }
                         }
-                        coloring.base_bg = consoleColor.Value;
-                        base_bg_set = true;
                     }
                     else if (attributeNameLower == "active_text") {
                         if (active_text_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloring;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloring;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloring.active_text = consoleColor.Value;
+                                active_text_set = true;
+                            }
                         }
-                        coloring.active_text = consoleColor.Value;
-                        active_text_set = true;
                     }
                     else if (attributeNameLower == "active_bg") {
                         if (active_bg_set) {
-                            errorMessage = "[Coloring] Attribute found twice: " + attributeName;
-                            return coloring;
+                            AddError("[Coloring] Attribute found more than once: " + attributeName);
                         }
-                        var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
-                        if (!consoleColor.HasValue) {
-                            errorMessage = "[Coloring] Unable to Interpret: " + attributeName;
-                            return coloring;
+                        else {
+                            var consoleColor = ObjectParser.GetConsoleColor(attributeValue);
+                            if (!consoleColor.HasValue) {
+                                AddError("[Coloring] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                coloring.active_bg = consoleColor.Value;
+                                active_bg_set = true;
+                            }
                         }
-                        coloring.active_bg = consoleColor.Value;
-                        active_bg_set = true;
                     }
                     else {
-                        errorMessage = "[Coloring] Attribute Name not expected: " + attributeName;
-                        return coloring;
+                        AddError("[Coloring] Attribute Name not expected: " + attributeName);
                     }
                 }
             }
             if (!base_text_set) {
-                errorMessage = "[Coloring] Attribute not found: base_text";
-                return coloring;
+                AddError("[Coloring] Attribute not found: base_text");
             }
-            else if (!base_bg_set) {
-                errorMessage = "[Coloring] Attribute not found: base_bg";
-                return coloring;
+            if (!base_bg_set) {
+                AddError("[Coloring] Attribute not found: base_bg");
             }
-            else if (!active_text_set) {
-                errorMessage = "[Coloring] Attribute not found: active_text";
-                return coloring;
+            if (!active_text_set) {
+                AddError("[Coloring] Attribute not found: active_text");
             }
-            else if (!active_bg_set) {
-                errorMessage = "[Coloring] Attribute not found: active_bg";
-                return coloring;
+            if (!active_bg_set) {
+                AddError("[Coloring] Attribute not found: active_bg");
             }
-            errorMessage = null;
+
             return coloring;
         }
 
-        private static AbstractScores ReadScores(XElement element, out string errorMessage) {
+        private static AbstractScores ReadScores(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             AbstractScores scores = new AbstractScores();
 
             bool strength_set = false;
@@ -328,113 +339,121 @@ useSpecial = true*/
 
                     if (attributeNameLower == "str") {
                         if (strength_set) {
-                            errorMessage = "[Scores] Attribute found twice: " + attributeName;
-                            return scores;
+                            AddError("[Scores] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Scores] Unable to Interpret: " + attributeName;
-                            return scores;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Scores] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                scores.strength = tokens.Value;
+                                strength_set = true;
+                            }
                         }
-                        scores.strength = tokens.Value;
-                        strength_set = true;
                     }
                     else if (attributeNameLower == "dex") {
                         if (dexterity_set) {
-                            errorMessage = "[Scores] Attribute found twice: " + attributeName;
-                            return scores;
+                            AddError("[Scores] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Scores] Unable to Interpret: " + attributeName;
-                            return scores;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Scores] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                scores.dexterity = tokens.Value;
+                                dexterity_set = true;
+                            }
                         }
-                        scores.dexterity = tokens.Value;
-                        dexterity_set = true;
                     }
                     else if(attributeNameLower == "con") {
                         if (constitution_set) {
-                            errorMessage = "[Scores] Attribute found twice: " + attributeName;
-                            return scores;
+                            AddError("[Scores] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Scores] Unable to Interpret: " + attributeName;
-                            return scores;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Scores] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                scores.constitution = tokens.Value;
+                                constitution_set = true;
+                            }
                         }
-                        scores.constitution = tokens.Value;
-                        constitution_set = true;
                     }
                     else if (attributeNameLower == "int") {
                         if (intelligence_set) {
-                            errorMessage = "[Scores] Attribute found twice: " + attributeName;
-                            return scores;
+                            AddError("[Scores] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Scores] Unable to Interpret: " + attributeName;
-                            return scores;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Scores] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                scores.intelligence = tokens.Value;
+                                intelligence_set = true;
+                            }
                         }
-                        scores.intelligence = tokens.Value;
-                        intelligence_set = true;
                     }
                     else if(attributeNameLower == "wis") {
                         if (wisdom_set) {
-                            errorMessage = "[Scores] Attribute found twice: " + attributeName;
-                            return scores;
+                            AddError("[Scores] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Scores] Unable to Interpret: " + attributeName;
-                            return scores;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Scores] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                scores.wisdom = tokens.Value;
+                                wisdom_set = true;
+                            }
                         }
-                        scores.wisdom = tokens.Value;
-                        wisdom_set = true;
                     }
                     else if (attributeNameLower == "cha") {
                         if (charisma_set) {
-                            errorMessage = "[Scores] Attribute found twice: " + attributeName;
-                            return scores;
+                            AddError("[Scores] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Scores] Unable to Interpret: " + attributeName;
-                            return scores;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Scores] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                scores.charisma = tokens.Value;
+                                charisma_set = true;
+                            }
                         }
-                        scores.charisma = tokens.Value;
-                        charisma_set = true;
+                    }
+                    else {
+                        AddError("[Scores] Attribute Name not expected: " + attributeName);
                     }
                 }
             }
             if (!strength_set) {
-                errorMessage = "[Scores] Attribute not found: str";
-                return scores;
+                AddError("[Scores] Attribute not found: str");
             }
             if (!dexterity_set) {
-                errorMessage = "[Scores] Attribute not found: dex";
-                return scores;
+                AddError("[Scores] Attribute not found: dex");
             }
             if (!constitution_set) {
-                errorMessage = "[Scores] Attribute not found: con";
-                return scores;
+                AddError("[Scores] Attribute not found: con");
             }
             if (!intelligence_set) {
-                errorMessage = "[Scores] Attribute not found: int";
-                return scores;
+                AddError("[Scores] Attribute not found: int");
             }
             if (!wisdom_set) {
-                errorMessage = "[Scores] Attribute not found: wis";
-                return scores;
+                AddError("[Scores] Attribute not found: wis");
             }
             if (!charisma_set) {
-                errorMessage = "[Scores] Attribute not found: cha";
-                return scores;
+                AddError("[Scores] Attribute not found: cha");
             }
-            errorMessage = null;
             return scores;
         }
 
-        private static Attack ReadAttack(XElement element, out string errorMessage) {
+        private static Attack ReadAttack(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             Attack attack = new Attack();
 
             bool name_set = false;
@@ -449,88 +468,92 @@ useSpecial = true*/
 
                     if(attributeNameLower == "name") {
                         if (name_set) {
-                            errorMessage = "[Attack] Attribute found twice: " + attributeName;
-                            return attack;
+                            AddError("[Attack] Attribute found more than once: " + attributeName);
                         }
-                        attack.name = ObjectParser.FormatLine(attributeValue);
-                        name_set = true;
+                        else {
+                            attack.name = ObjectParser.FormatLine(attributeValue);
+                            name_set = true;
+                        } 
                     }
                     if (attributeNameLower == "atk") {
                         if (attack_set) {
-                            errorMessage = "[Attack] Attribute found twice: " + attributeName;
-                            return attack;
+                            AddError("[Attack] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Attack] Unable to Interpret: " + attributeName;
-                            return attack;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Attack] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                attack.attack = tokens.Value;
+                                attack_set = true;
+                            }
                         }
-                        attack.attack = tokens.Value;
-                        attack_set = true;
                     }
                     else if (attributeNameLower == "mod") {
                         if (attack_set) {
-                            errorMessage = "[Attack] Attribute found twice: " + attributeName;
-                            return attack;
+                            AddError("[Attack] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens("D20+" + attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Attack] Unable to Interpret: " + attributeName;
-                            return attack;
+                        else {
+                            var tokens = ObjectParser.GetTokens("D20+" + attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Attack] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                attack.attack = tokens.Value;
+                                attack_set = true;
+                            }
                         }
-                        attack.attack = tokens.Value;
-                        attack_set = true;
                     }
                     else if(attributeNameLower == "dmg") {
                         if (damage_set) {
-                            errorMessage = "[Attack] Attribute found twice: " + attributeName;
-                            return attack;
+                            AddError("[Attack] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Attack] Unable to Interpret: " + attributeName;
-                            return attack;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Attack] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                attack.damage = tokens.Value;
+                                damage_set = true;
+                            }
                         }
-                        attack.damage = tokens.Value;
-                        damage_set = true;
+                    }
+                    else {
+                        AddError("[Attack] Attribute Name not expected: " + attributeName);
                     }
                 }
             }
             if (!name_set) {
-                errorMessage = "[Attack] Attribute not found: name";
-                return attack;
+                AddError("[Attack] Attribute not found: name");
             }
             if (!attack_set) {
-                errorMessage = "[Attack] Attribute not found: atk/mod";
-                return attack;
+                AddError("[Attack] Attribute not found: atk/mod");
             }
             if (!damage_set) {
-                errorMessage = "[Attack] Attribute not found: dmg";
-                return attack;
+                AddError("[Attack] Attribute not found: dmg");
             }
-            errorMessage = null;
             return attack;
         }
 
-        private static Conditions ReadConditions(XElement element, out string errorMessage) {
+        private static Conditions ReadConditions(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             string[] conditionNames = element.Value.Replace(" ", string.Empty).Split(',');
             Conditions conditions = new Conditions(conditionNames.Length);
 
             for (int index = 0; index < conditionNames.Length; ++index) {
                 var condition = conditionNames[index].GetCondition();
-                if (condition.HasValue) {
-                    conditions.Add(condition.Value);
+                if (!condition.HasValue) {
+                    AddError("[Conditons] Unable to Interpret: " + conditionNames[index]);
                 }
                 else {
-                    errorMessage = "[Conditons] Unable to Interpret: " + conditionNames[index];
-                    return conditions;
+                    conditions.Add(condition.Value);
                 }
             }
-            errorMessage = null;
             return conditions;
         }
 
-        private static AbstractActor ReadActor(XElement element, out string errorMessage) {
+        private static AbstractActor ReadActor(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             AbstractActor actor = new AbstractActor();
 
             // Read Attributes
@@ -551,103 +574,117 @@ useSpecial = true*/
 
                     if(attributeNameLower == "name") {
                         if (name_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        actor.name = ObjectParser.FormatLine(attributeValue);
-                        name_set = true;
+                        else {
+                            actor.name = ObjectParser.FormatLine(attributeValue);
+                            name_set = true;
+                        }
                     }
                     else if(attributeNameLower == "ini") {
                         if (ini_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Actor] Unable to Interpret: " + attributeName;
-                            return actor;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Actor] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                actor.initiative = tokens.Value;
+                                ini_set = true;
+                            }
                         }
-                        actor.initiative = tokens.Value;
-                        ini_set = true;
                     }
                     else if(attributeNameLower == "hp") {
                         if (hp_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Actor] Unable to Interpret: " + attributeName;
-                            return actor;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Actor] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                actor.HP = tokens.Value;
+                                hp_set = true;
+                            }
                         }
-                        actor.HP = tokens.Value;
-                        hp_set = true;
                     }
                     else if(attributeNameLower == "temp") {
                         if (temp_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Actor] Unable to Interpret: " + attributeName;
-                            return actor;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Actor] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                actor.temporary = tokens.Value;
+                                temp_set = true;
+                            }
                         }
-                        actor.temporary = tokens.Value;
-                        temp_set = true;
                     }
                     else if(attributeNameLower == "coloring") {
                         if (coloringType_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        actor.coloringType = attributeValue;
-                        coloringType_set = true;
+                        else {
+                            actor.coloringType = attributeValue;
+                            coloringType_set = true;
+                        }
                     }
                     else if(attributeNameLower == "ac") {
                         if (ac_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetTokens(attributeValue);
-                        if (!tokens.HasValue || !tokens.Value.Validate()) {
-                            errorMessage = "[Actor] Unable to Interpret: " + attributeName;
-                            return actor;
+                        else {
+                            var tokens = ObjectParser.GetTokens(attributeValue);
+                            if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                AddError("[Actor] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                actor.armorClass = tokens.Value;
+                                ac_set = true;
+                            }
                         }
-                        actor.armorClass = tokens.Value;
-                        ac_set = true;
                     }
                     else if(attributeNameLower == "speed") {
                         if (speed_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        actor.speed = ObjectParser.FormatLine(attributeValue);
-                        speed_set = true;
+                        else {
+                            actor.speed = ObjectParser.FormatLine(attributeValue);
+                            speed_set = true;
+                        }
                     }
                     else if(attributeNameLower == "remove") {
                         if (remove_set) {
-                            errorMessage = "[Actor] Attribute found twice: " + attributeName;
-                            return actor;
+                            AddError("[Actor] Attribute found more than once: " + attributeName);
                         }
-                        var tokens = ObjectParser.GetBoolean(attributeValue);
-                        if (!tokens.HasValue) {
-                            errorMessage = "[Actor] Unable to Interpret: " + attributeName;
-                            return actor;
+                        else {
+                            var tokens = ObjectParser.GetBoolean(attributeValue);
+                            if (!tokens.HasValue) {
+                                AddError("[Actor] Unable to Interpret: " + attributeName);
+                            }
+                            else {
+                                actor.remove = tokens.Value;
+                                remove_set = true;
+                            }
                         }
-                        actor.remove = tokens.Value;
-                        remove_set = true;
+                    }
+                    else {
+                        AddError("[Actor] Attribute not expected: " + attributeName);
                     }
                 }
             }
 
             if (!name_set) {
-                errorMessage = "[Actor] Attribute not found: name";
-                return actor;
+                AddError("[Actor] Attribute not found: name");
             }
             if (!hp_set) {
-                errorMessage = "[Actor] Attribute not found: hp";
-                return actor;
+                AddError("[Actor] Attribute not found: hp");
             }
             // Read Elements
 
@@ -664,81 +701,81 @@ useSpecial = true*/
 
                     if(childNameLower == "scores") {
                         if (scores_set) {
-                            errorMessage = "[Actor] Element found twice: " + childName;
-                            return actor;
+                            AddError("[Actor] Element found more than once: " + childName);
                         }
-                        var scores = ReadScores(child, out string scoresMessage);
-                        if(scoresMessage != null) {
-                            errorMessage = "[Actor]" + scoresMessage;
-                            return actor;
+                        else {
+                            int errorCount = GetErrorCount();
+                            var scores = ReadScores(child, AddError, GetErrorCount);
+                            if(GetErrorCount() == errorCount) {
+                                actor.scores = scores;
+                                scores_set = true;
+                            }
                         }
-                        actor.scores = scores;
-                        scores_set = true;
                     }
                     else if(childNameLower == "attack") {
-                        var attack = ReadAttack(child, out string attackMessage);
-                        if(attackMessage != null) {
-                            errorMessage = "[Actor]" + attackMessage;
-                            return actor;
+                        int errorCount = GetErrorCount();
+                        var attack = ReadAttack(child, AddError, GetErrorCount);
+                        if(GetErrorCount() == errorCount) {
+                            actor.attacks.Add(attack);
                         }
-                        actor.attacks.Add(attack);
                     }
                     else if(childNameLower == "conditions") {
                         if (conditions_set) {
-                            errorMessage = "[Actor] Element found twice: " + childName;
-                            return actor;
+                            AddError("[Actor] Element found more than once: " + childName);
                         }
-                        actor.conditions = ReadConditions(child, out string conditionsMessage);
-                        if(conditionsMessage != null) {
-                            errorMessage = "[Actor]" + conditionsMessage;
-                            return actor;
+                        else {
+                            int errorCount = GetErrorCount();
+                            var conditions = ReadConditions(child, AddError, GetErrorCount);
+                            if(GetErrorCount() == errorCount) {
+                                actor.conditions = conditions;
+                                conditions_set = true;
+                            }
                         }
-                        conditions_set = true;
                     }
                     else if(childNameLower == "note") {
                         actor.notes.Add(ObjectParser.FormatLine(child.Value));
                     }
                     else if (childNameLower == "description") {
                         if (description_set) {
-                            errorMessage = "[Actor] Element found twice: " + childName;
-                            return actor;
+                            AddError("[Actor] Element found more than once: " + childName);
                         }
-                        actor.description = ObjectParser.FormatText(child.Value);
-                        description_set = true;
+                        else {
+                            actor.description = ObjectParser.FormatText(child.Value);
+                            description_set = true;
+                        }
                     }
                     else if (childNameLower == "coloring") {
                         if (coloring_set) {
-                            errorMessage = "[Actor] Element found twice: " + childName;
-                            return actor;
+                            AddError("[Actor] Element found more than once: " + childName);
                         }
-                        var coloring = ReadColoring(child, out string coloringMessage);
-                        if (coloringMessage != null) {
-                            errorMessage = "[Actor]" + coloringMessage;
-                            return actor;
+                        else {
+                            int errorCount = GetErrorCount();
+                            var coloring = ReadColoring(child, AddError, GetErrorCount);
+                            if(GetErrorCount() == errorCount) {
+                                actor.coloring = coloring;
+                                coloring_set = true;
+                            }
                         }
-                        actor.coloring = coloring;
-                        coloring_set = true;
+                    }
+                    else {
+                        AddError("[Actor] Element not expected: " + childName);
                     }
                 }
             }
             if(!ini_set && !scores_set) {
-                errorMessage = "[Actor] Unable to Determine Value: ini";
-                return actor;
+                AddError("[Actor] Unable to Determine Value: ini");
             }
             if(coloring_set && coloringType_set) {
-                errorMessage = "[Actor] Ambiguity: Coloring is defined twice";
-                return actor;
+                AddError("[Actor] Ambiguity: Coloring is defined more than once");
             }
-            errorMessage = null;
             return actor;
         }
 
-        private static Group ReadGroup(XElement element, out List<string> errorMessages) {
-            errorMessages = new List<string>();
+        private static Group ReadGroup(XElement element, Action<string> AddError, Func<int> GetErrorCount) {
             Group group = new Group();
 
             // Read Attributes
-            bool name_set = false;
+            bool groupName_set = false;
             using (var attributeEnum = element.Attributes().GetEnumerator()) {
                 while (attributeEnum.MoveNext()) {
                     var attributeName = attributeEnum.Current.Name.ToString();
@@ -746,30 +783,76 @@ useSpecial = true*/
                     var attributeValue = attributeEnum.Current.Value;
 
                     if(attributeNameLower == "name") {
-                        if (name_set) {
-                            errorMessages.Add("[Group] Attribute found twice: " + attributeName);
+                        if (groupName_set) {
+                            AddError("[Group] Attribute found twice: " + attributeName);
                             return group;
                         }
                         group.name = ObjectParser.FormatLine(attributeValue);
-                        name_set = true;
+                        groupName_set = true;
+                    }
+                    else {
+                        AddError("[Group] Attribute not expected: " + attributeName);
                     }
                 }
             }
-            if (!name_set) {
-                errorMessages.Add("[Group] Attribute not found: name");
+            if (!groupName_set) {
+                AddError("[Group] Attribute not found: name");
                 return group;
             }
 
             // Read Elements
             using (var childEnum = element.Elements().GetEnumerator()) {
                 while (childEnum.MoveNext()) {
-                    var actor = ReadActor(childEnum.Current, out string actorMessage);
-                    if (actorMessage == null) {
-                        group.actors.Add(actor);
+                    bool actorName_set = false;
+                    bool actorAmount_set = false;
+                    string actorName = null;
+                    List<Token> actorAmount = null;
+
+                    // Get Attributes
+                    using (var attributeEnum = childEnum.Current.Attributes().GetEnumerator()) {
+                        while (attributeEnum.MoveNext()) {
+                            var attributeName = attributeEnum.Current.Name.ToString();
+                            var attributeNameLower = attributeName.ToLowerInvariant();
+                            var attributeValue = attributeEnum.Current.Value;
+
+                            if(attributeNameLower == "name") {
+                                if (actorName_set) {
+                                    AddError("[Group " + group.name + "] Attribute found twice: " + attributeName);
+                                }
+                                else {
+                                    actorName = ObjectParser.FormatLine(attributeValue);
+                                    actorName_set = true;
+                                }
+                            }
+                            else if(attributeNameLower == "amount") {
+                                if (actorAmount_set) {
+                                    AddError("[Group " + group.name + "] Attribute found twice: " + attributeName);
+                                }
+                                else {
+                                    var tokens = ObjectParser.GetTokens(attributeValue);
+                                    if (!tokens.HasValue || !tokens.Value.Validate()) {
+                                        AddError("[Group " + group.name + "] Unable to Interpret: " + attributeName);
+                                    }
+                                    else {
+                                        actorAmount = tokens.Value;
+                                        actorAmount_set = true;
+                                    }
+                                }
+                            }
+                            else {
+                                AddError("[Group " + group.name + "] Attribute not expected: " + attributeName);
+                            }
+                        }
                     }
-                    else {
-                        errorMessages.Add("[Group]" + actorMessage);
+                    // Add Actor(s)
+                    if (!actorName_set) {
+                        AddError("[Group " + group.name + "] Child Attribute not found: name");
+                        continue;
                     }
+                    if (!actorAmount_set) {
+                        actorAmount = new List<Token> { new Token(TokenType.Integer, 1) };
+                    }
+                    group.actors.Add(new Tuple<string, List<Token>>(actorName, actorAmount));
                 }
             }
             return group;
@@ -785,53 +868,57 @@ useSpecial = true*/
 #endif
         }
 
-        public static Settings GetSettings(string path, out string errorMessage) {
+        public static Settings GetSettings(string path, List<string> errors) {
             string[] text;
             try {
                 text = File.ReadAllLines(path);
             }
-            catch (Exception exception) {
-                errorMessage = "[Settings] Encountered Issue when Loading Settings: " + exception;
+            catch (Exception ex) {
+                errors.Add("[Settings, path='" + path + "'] Encountered Issue when Loading Settings: " + ex.ToString());
                 return default;
             }
-            return ReadSettings(text, out errorMessage);
+            void AddError(string error) { errors.Add("[Settings, path='" + path + "']" + error); }
+            int GetCount() => errors.Count;
+            return ReadSettings(text, AddError, GetCount);
         }
 
         /// <summary>
         /// Adds the Colors in the .xml Document to coloringTypes, and any encountered Errors to errorMessages
         /// </summary>
-        public static void GetColorings(string path, ref List<ColoringType> coloringTypes, ref List<string> errorMessages) {
+        public static void GetColorings(string path, List<ColoringType> coloringTypes, List<string> errors) {
             XElement root;
             try {
                 root = XDocument.Load(path).Root;
             }
             catch (Exception ex) {
-                errorMessages.Add("[Colorings] Encountered issue when Loading from " + path + ": " + ex.ToString());
+                errors.Add("[Colorings] Encountered issue when Loading from " + path + ": " + ex.ToString());
                 return;
             }
+            void AddError(string error) { errors.Add("[Colorings, path='" + path + "']" + error); }
+            int GetCount() => errors.Count;
 
             using (var elementEnum = root.Elements().GetEnumerator()) {
                 while (elementEnum.MoveNext()) {
-                    var coloring = ReadColoringType(elementEnum.Current, out string errorMessage);
-                    if(errorMessage == null) {
+                    int errorCount = errors.Count;
+                    var coloring = ReadColoringType(elementEnum.Current, AddError, GetCount);
+                    if(errors.Count == errorCount) {
                         coloringTypes.Add(coloring);
-                    }
-                    else {
-                        errorMessages.Add("[Colorings, path='" + path + "']" + errorMessage);
                     }
                 }
             }
         }
 
-        public static void GetActors(string path, ref List<AbstractActor> actors, ref List<Group> groups, ref List<string> errorMessages) {
+        public static void GetActors(string path, List<AbstractActor> actors, List<Group> groups, List<string> errors) {
             XElement root;
             try {
                 root = XDocument.Load(path).Root;
             }
             catch (Exception ex) {
-                errorMessages.Add("[Actors] Encountered Issue when loading from " + path + ": " + ex.ToString());
+                errors.Add("[Actors] Encountered Issue when loading from " + path + ": " + ex.ToString());
                 return;
             }
+            void AddError(string error) { errors.Add("[Actors, path='" + path + "']" + error); }
+            int GetCount() => errors.Count;
 
             using (var elementEnum = root.Elements().GetEnumerator()) {
                 while (elementEnum.MoveNext()) {
@@ -840,27 +927,21 @@ useSpecial = true*/
                     var elementNameLower = elementName.ToLowerInvariant();
 
                     if(elementNameLower == "actor") {
-                        var actor = ReadActor(element, out string actorMessage);
-                        if(actorMessage == null) {
+                        int errorCount = errors.Count;
+                        var actor = ReadActor(element, AddError, GetCount);
+                        if(errors.Count == errorCount) {
                             actors.Add(actor);
-                        }
-                        else {
-                            errorMessages.Add("[Actors, path='" + path + "']" + actorMessage);
                         }
                     }
                     else if(elementNameLower == "group") {
-                        var group = ReadGroup(element, out List<string> groupMessages);
-                        if(groupMessages == null || groupMessages.Count == 0) {
+                        int errorCount = errors.Count;
+                        var group = ReadGroup(element, AddError, GetCount);
+                        if(errors.Count == errorCount) {
                             groups.Add(group);
-                        }
-                        else {
-                            for(int index = 0; index < groupMessages.Count; ++index) {
-                                errorMessages.Add("[Actors, path='" + path + "']" + groupMessages[index]);
-                            }
                         }
                     }
                     else {
-                        errorMessages.Add("[Actors, path='" + path + "'] Element Name not expected: " + elementName);
+                        errors.Add("[Actors, path='" + path + "'] Element Name not expected: " + elementName);
                     }
                 }
             }
@@ -869,46 +950,52 @@ useSpecial = true*/
         /// <summary>
         /// Returns whether Loading was Successful and creates the Appropriate Screen
         /// </summary>
-        public static bool Load(bool loadSettings) {
+        public static bool Load(bool isStartUp) {
             var folderDir = GetFolderDirectory();
-            if (loadSettings) {
+            var errors = new List<string>();
+            if (isStartUp) {
                 // Load Settings
-                Program.settings = GetSettings(Path.Combine(folderDir, "Settings", "settings.txt"), out string settingsError);
-                if (settingsError != null) {
-                    Program.screenWriter.Write(Output.GetFatalErrorLoadingScreen(settingsError));
+                Program.settings = GetSettings(Path.Combine(folderDir, "Settings", "settings.txt"), errors);
+                if (errors.Count != 0) {
+                    Program.screenWriter.Write(Output.GetFatalErrorLoadingScreen(errors));
                     return false;
                 }
             }
-            
-            var errorMessages = new List<string>();
+            // Load Special Chars
+            Program.specialCharacters.Setup(Program.settings.useSpecial);
+
             // Load Colorings
             try {
                 var coloringPaths = Directory.GetFiles(Path.Combine(folderDir, "Colorings"), "*.xml", SearchOption.TopDirectoryOnly);
                 for (int index = 0; index < coloringPaths.Length; ++index) {
-                    GetColorings(coloringPaths[index], ref Program.data.loadedColorings, ref errorMessages);
+                    GetColorings(coloringPaths[index], Program.data.loadedColoringTypes, errors);
                 }
             }
             catch (Exception coloringEx) {
-                errorMessages.Add("[Colorings] Encountered Issue when Loading Colorings: '" + coloringEx.ToString());
+                errors.Add("[Colorings] Encountered Issue when Loading Colorings: '" + coloringEx.ToString());
             }
             // Load Actors
             try {
                 var actorPaths = Directory.GetFiles(Path.Combine(folderDir, "Actors"), "*.xml", SearchOption.TopDirectoryOnly);
                 for (int index = 0; index < actorPaths.Length; ++index) {
-                    GetActors(actorPaths[index], ref Program.data.loadedActors, ref Program.data.loadedGroups, ref errorMessages);
+                    GetActors(actorPaths[index], Program.data.loadedActors, Program.data.loadedGroups, errors);
                 }
             }
             catch (Exception actorEx) {
-                errorMessages.Add("[Actors] Encountered Issue when loading Actors: " + actorEx.ToString());
+                errors.Add("[Actors] Encountered Issue when loading Actors: " + actorEx.ToString());
+            }
+            Program.data.ValidateGroups(ref errors);
+            if (isStartUp) {
+                Program.data.AutoaddGroups(ref errors);
             }
 
-            Program.screenWriter.Write(Output.GetSuccessfulLoadingScreen(errorMessages, true));
+            Program.screenWriter.Write(Output.GetSuccessfulLoadingScreen(errors, true));
             return true;
         }
 
-        public static void WriteToXML(XElement element, string path, out string errorMessage) {
+        public static void WriteToXML(XElement element, string path, List<string> errors) {
             if(Path.GetExtension(path) != ".xml") {
-                errorMessage = "[Saving] Bad Path Extension";
+                errors.Add("[Saving] Bad Path Extension");
                 return;
             }
             XDocument document;
@@ -917,27 +1004,25 @@ useSpecial = true*/
                     document = XDocument.Load(path);
                 }
                 catch(Exception readEx) {
-                    errorMessage = "[Saving] Encountered Issue when Loading: " + readEx.ToString();
+                    errors.Add("[Saving] Encountered Issue when Loading: " + readEx.ToString());
                     return;
                 }
                 document.Root.Add(element);
             }
             else {
+                // Create new
                 document = new XDocument();
                 document.Declaration = new XDeclaration("1.0", "utf-8", "yes");
                 document.Add(new XElement("root", element));
-                // Create new
             }
 
             try {
                 document.Save(path);
             }
             catch (Exception saveEx) {
-                errorMessage = "[Saving] Encountered Issue when Saving: " + saveEx.ToString();
+                errors.Add("[Saving] Encountered Issue when Saving: " + saveEx.ToString());
                 return;
             }
-
-            errorMessage = null;
         }
     }
 }

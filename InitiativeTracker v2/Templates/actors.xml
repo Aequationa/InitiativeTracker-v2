@@ -13,7 +13,8 @@
     </description>
     <coloring base_text="White" base_bg="White" active_text="White" active_bg="White"></coloring>
   </actor>
-  <group name="A Group">
-    <!--Add Actors here-->
+  <group name="autoadd All them Christophs">
+    <actor name="Chris"></actor>
+    <actor name="Chris" amount="5"></actor>
   </group>
 </root>

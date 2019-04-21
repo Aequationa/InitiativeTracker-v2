@@ -12,3 +12,17 @@ C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin
 C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker.pdb
 C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker.dll
 C:\Users\Sebastian Ohrem\Documents\InitiativeTracker v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker.pdb
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\libhostpolicy.so
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\libhostfxr.so
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker.deps.json
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker.runtimeconfig.json
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker.runtimeconfig.dev.json
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker.dll
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\bin\Release\netcoreapp2.1\linux-x64\InitiativeTracker.pdb
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker v2.csprojAssemblyReference.cache
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker v2.csproj.CoreCompileInputs.cache
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker v2.AssemblyInfoInputs.cache
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker v2.AssemblyInfo.cs
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker.dll
+C:\Users\Sebastian Ohrem\Documents\GitHub\InitiativeTracker-v2\InitiativeTracker v2\obj\Release\netcoreapp2.1\linux-x64\InitiativeTracker.pdb

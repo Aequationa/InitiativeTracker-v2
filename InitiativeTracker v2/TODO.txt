@@ -1,2 +1,2 @@
-﻿
-update settings
+﻿make error handling a bit more user-friendly --> display more of them errors ^^
+and format names with that input everywhere

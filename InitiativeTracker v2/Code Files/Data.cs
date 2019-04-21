@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace InitiativeTracker
 {
@@ -149,7 +150,7 @@ namespace InitiativeTracker
         // Note: This list is id-sorted at all times
         private List<Actor> actors;
 
-        public List<ColoringType> loadedColorings;
+        public List<ColoringType> loadedColoringTypes;
         public List<AbstractActor> loadedActors;
         public List<Group> loadedGroups;
 
@@ -160,7 +161,7 @@ namespace InitiativeTracker
         public Data() {
             idList = new List<int>();
             actors = new List<Actor>();
-            loadedColorings = new List<ColoringType>();
+            loadedColoringTypes = new List<ColoringType>();
             loadedActors = new List<AbstractActor>();
             loadedGroups = new List<Group>();
 
@@ -169,9 +170,39 @@ namespace InitiativeTracker
             nextID = 0;
         }
 
+        public void ValidateGroups(ref List<string> errors) {
+            for(int groupIndex = loadedGroups.Count - 1; groupIndex >= 0; --groupIndex) {
+                bool allFound = true;
+                for(int actorIndex = 0; actorIndex < loadedGroups[groupIndex].actors.Count; ++actorIndex) {
+                    bool thisFound = false;
+                    for (int loadedActorIndex = 0; loadedActorIndex < loadedActors.Count; ++loadedActorIndex) {
+                        if (loadedActors[loadedActorIndex].name == loadedGroups[groupIndex].actors[actorIndex].Item1) {
+                            thisFound = true;
+                            break;
+                        }
+                    }
+                    if (!thisFound) {
+                        errors.Add("[Group " + loadedGroups[groupIndex].name + "] Unable to Find Actor " + loadedGroups[groupIndex].actors[actorIndex].Item1);
+                        allFound = false;
+                    }
+                }
+                if (!allFound) {
+                    loadedGroups.RemoveAt(groupIndex);
+                }
+            }
+        }
+
+        public void AutoaddGroups(ref List<string> errors) {
+            for(int groupIndex = 0; groupIndex < loadedGroups.Count; ++groupIndex) {
+                if(loadedGroups[groupIndex].name.StartsWith("autoadd", StringComparison.InvariantCultureIgnoreCase)) {
+                    AddGroup_Silent(loadedGroups[groupIndex].actors);
+                }
+            }
+        }
+
         public bool HasColoringType(string coloringType) {
-            for(int index = 0; index < loadedColorings.Count; ++index) {
-                if(loadedColorings[index].name == coloringType) {
+            for(int index = 0; index < loadedColoringTypes.Count; ++index) {
+                if(loadedColoringTypes[index].name == coloringType) {
                     return true;
                 }
             }
@@ -203,22 +234,63 @@ namespace InitiativeTracker
         }
 
         public void AddActor(AbstractActor actor) {
-            var instance = actor.CreateInstance(loadedColorings, out string errorMessage);
+            var instance = actor.CreateInstance(loadedColoringTypes, out string errorMessage);
             if(errorMessage == null) {
                 AddActor_Silent(instance);
                 changes.Push(new AddActors(instance));
             }
         }
-        public void AddActors(List<AbstractActor> actors) {
+        public void AddGroup(List<Tuple<string, List<Token>>> group) {
             var change = new AddActors();
-            for(int index = 0; index < actors.Count; ++index) {
-                var instance = actors[index].CreateInstance(loadedColorings, out string errorMessage);
-                if (errorMessage == null) {
-                    AddActor_Silent(instance);
-                    change.ids.Add(instance.id);
+            for(int groupIndex = 0; groupIndex < group.Count; ++groupIndex) {
+                // Get Actor
+                AbstractActor actor = null;
+                for(int actorIndex = 0; actorIndex < loadedActors.Count; ++actorIndex) {
+                    if(loadedActors[actorIndex].name == group[groupIndex].Item1) {
+                        actor = loadedActors[actorIndex];
+                        break;
+                    }
+                }
+                if(actor != null) {
+                    // Get Amount
+                    var amount = group[groupIndex].Item2.Evaluate();
+                    if (amount.HasValue) {
+                        for(int count = 0; count < amount.Value; ++count) {
+                            var instance = actor.CreateInstance(loadedColoringTypes, out string errorMessage);
+                            if (errorMessage == null) {
+                                AddActor_Silent(instance);
+                                change.ids.Add(instance.id);
+                            }
+                        }
+                    }
                 }
             }
             changes.Push(change);
+        }
+
+        public void AddGroup_Silent(List<Tuple<string, List<Token>>> group) {
+            for (int groupIndex = 0; groupIndex < group.Count; ++groupIndex) {
+                // Get Actor
+                AbstractActor actor = null;
+                for (int actorIndex = 0; actorIndex < loadedActors.Count; ++actorIndex) {
+                    if (loadedActors[actorIndex].name == group[groupIndex].Item1) {
+                        actor = loadedActors[actorIndex];
+                        break;
+                    }
+                }
+                if (actor != null) {
+                    // Get Amount
+                    var amount = group[groupIndex].Item2.Evaluate();
+                    if (amount.HasValue) {
+                        for (int count = 0; count < amount.Value; ++count) {
+                            var instance = actor.CreateInstance(loadedColoringTypes, out string errorMessage);
+                            if (errorMessage == null) {
+                                AddActor_Silent(instance);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void AddActor_Silent(Actor actor) {
@@ -348,7 +420,6 @@ namespace InitiativeTracker
 
         }
 
-        // TODO!
         public void GainTemporary(int id, int amount) {
             var actor = GetActor(id);
             if (actor != null) {

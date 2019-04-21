@@ -4,4 +4,4 @@ defaultType=6
 tabWidth=4
 resizeConsole=true
 resizeBuffer=true
-useSpecial=true
+useSpecial=false
